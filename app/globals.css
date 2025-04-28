@@ -24,6 +24,7 @@
     --input: 240 5.9% 90%;
     --ring: 346.8 77.2% 49.8%;
     --radius: 0.5rem;
+    --accent-color: rgb(236, 72, 153);
   }
 
   .dark {
@@ -56,4 +57,55 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Apply accent color to primary elements */
+.btn-primary,
+.bg-primary,
+.text-primary,
+.border-primary,
+.ring-primary {
+  color: var(--primary-foreground);
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+/* Compact mode styles */
+.compact-mode .card {
+  padding: 0.75rem;
+}
+
+.compact-mode .p-4 {
+  padding: 0.5rem;
+}
+
+.compact-mode .p-6 {
+  padding: 0.75rem;
+}
+
+.compact-mode .space-y-4 > * + * {
+  margin-top: 0.5rem;
+}
+
+.compact-mode .space-y-6 > * + * {
+  margin-top: 0.75rem;
+}
+
+.compact-mode .gap-4 {
+  gap: 0.5rem;
+}
+
+.compact-mode .text-lg {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.compact-mode .text-xl {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.compact-mode .text-2xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
 }

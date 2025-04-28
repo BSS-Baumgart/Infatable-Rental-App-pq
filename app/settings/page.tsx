@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTheme } from "next-themes"
 import AppLayout from "@/components/layout/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,11 +15,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import UserManagement from "@/components/settings/user-management"
 import PermissionsManagement from "@/components/settings/permissions-management"
+import { useThemeContext } from "@/components/theme-provider"
 
 export default function SettingsPage() {
   const [currentUser] = useState(users[0]) // Using the first user as the current user
   const isAdmin = currentUser.role === "admin"
   const { toast } = useToast()
+  const { theme, setTheme } = useTheme()
+  const { themeOptions, setThemeOptions } = useThemeContext()
 
   const handleSaveAppearance = () => {
     toast({
@@ -32,6 +36,34 @@ export default function SettingsPage() {
       title: "General settings saved",
       description: "Your general settings have been updated successfully.",
     })
+  }
+
+  const handleDarkModeChange = (checked: boolean) => {
+    setTheme(checked ? "dark" : "light")
+  }
+
+  const handleSystemThemeChange = (checked: boolean) => {
+    if (checked) {
+      setTheme("system")
+    } else {
+      setTheme(
+        theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+          ? "dark"
+          : "light",
+      )
+    }
+  }
+
+  const handleAccentColorChange = (color: "pink" | "blue" | "green" | "purple") => {
+    setThemeOptions((prev) => ({ ...prev, accentColor: color }))
+  }
+
+  const handleCompactModeChange = (checked: boolean) => {
+    setThemeOptions((prev) => ({ ...prev, compactMode: checked }))
+  }
+
+  const handleCollapsedSidebarChange = (checked: boolean) => {
+    setThemeOptions((prev) => ({ ...prev, collapsedSidebar: checked }))
   }
 
   return (
@@ -180,7 +212,7 @@ export default function SettingsPage() {
                             Enable dark mode for the application
                           </p>
                         </div>
-                        <Switch id="darkMode" defaultChecked />
+                        <Switch id="darkMode" checked={theme === "dark"} onCheckedChange={handleDarkModeChange} />
                       </div>
 
                       <div className="flex items-center justify-between">
@@ -192,7 +224,11 @@ export default function SettingsPage() {
                             Follow your system's theme settings
                           </p>
                         </div>
-                        <Switch id="systemTheme" defaultChecked />
+                        <Switch
+                          id="systemTheme"
+                          checked={theme === "system"}
+                          onCheckedChange={handleSystemThemeChange}
+                        />
                       </div>
                     </div>
                   </div>
@@ -201,19 +237,31 @@ export default function SettingsPage() {
                     <h3 className="text-lg font-medium">Accent Color</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full bg-pink-500 mb-2 cursor-pointer ring-2 ring-pink-500 ring-offset-2 dark:ring-offset-gray-900"></div>
+                        <div
+                          className={`w-12 h-12 rounded-full bg-pink-500 mb-2 cursor-pointer ${themeOptions.accentColor === "pink" ? "ring-2 ring-pink-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+                          onClick={() => handleAccentColorChange("pink")}
+                        ></div>
                         <span className="text-sm">Pink</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full bg-blue-500 mb-2 cursor-pointer"></div>
+                        <div
+                          className={`w-12 h-12 rounded-full bg-blue-500 mb-2 cursor-pointer ${themeOptions.accentColor === "blue" ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+                          onClick={() => handleAccentColorChange("blue")}
+                        ></div>
                         <span className="text-sm">Blue</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full bg-green-500 mb-2 cursor-pointer"></div>
+                        <div
+                          className={`w-12 h-12 rounded-full bg-green-500 mb-2 cursor-pointer ${themeOptions.accentColor === "green" ? "ring-2 ring-green-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+                          onClick={() => handleAccentColorChange("green")}
+                        ></div>
                         <span className="text-sm">Green</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full bg-purple-500 mb-2 cursor-pointer"></div>
+                        <div
+                          className={`w-12 h-12 rounded-full bg-purple-500 mb-2 cursor-pointer ${themeOptions.accentColor === "purple" ? "ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+                          onClick={() => handleAccentColorChange("purple")}
+                        ></div>
                         <span className="text-sm">Purple</span>
                       </div>
                     </div>
@@ -231,7 +279,11 @@ export default function SettingsPage() {
                             Use a more compact layout with less whitespace
                           </p>
                         </div>
-                        <Switch id="compactMode" />
+                        <Switch
+                          id="compactMode"
+                          checked={themeOptions.compactMode}
+                          onCheckedChange={handleCompactModeChange}
+                        />
                       </div>
 
                       <div className="flex items-center justify-between">
@@ -241,13 +293,19 @@ export default function SettingsPage() {
                           </Label>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Start with the sidebar collapsed</p>
                         </div>
-                        <Switch id="sidebarCollapsed" />
+                        <Switch
+                          id="sidebarCollapsed"
+                          checked={themeOptions.collapsedSidebar}
+                          onCheckedChange={handleCollapsedSidebarChange}
+                        />
                       </div>
                     </div>
                   </div>
 
                   <div className="flex justify-end">
-                    <Button onClick={handleSaveAppearance}>Save Appearance</Button>
+                    <Button onClick={handleSaveAppearance} style={{ backgroundColor: "var(--accent-color)" }}>
+                      Save Appearance
+                    </Button>
                   </div>
                 </div>
               </CardContent>

@@ -1,5 +1,5 @@
 // User types
-export type UserRole = "admin" | "employee"
+export type UserRole = "admin" | "employee" | "manager" | "viewer" | string
 
 export interface User {
   id: string
@@ -27,6 +27,18 @@ export interface Client {
   createdAt: Date
 }
 
+// Maintenance types
+export interface MaintenanceRecord {
+  id: string
+  attractionId: string
+  date: Date
+  cost: number
+  description: string
+  performedBy: string
+  images?: string[]
+  createdAt: Date
+}
+
 // Attraction types
 export interface Attraction {
   id: string
@@ -39,6 +51,7 @@ export interface Attraction {
   setupTime: number // in minutes
   image?: string
   documents?: Document[]
+  maintenanceRecords?: MaintenanceRecord[]
 }
 
 // Reservation types

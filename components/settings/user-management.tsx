@@ -13,17 +13,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Plus, Search, Trash, UserIcon } from "lucide-react"
 import type { User, UserRole } from "@/lib/types"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>(initialUsers)
   const [searchTerm, setSearchTerm] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [formData, setFormData] = useState<Partial<User>>({
     name: "",
     email: "",
     role: "employee",
   })
+  const [roles, setRoles] = useState<UserRole[]>(["admin", "employee", "manager", "viewer"])
+  const [newRole, setNewRole] = useState("")
+  const [newRoleDescription, setNewRoleDescription] = useState("")
   const { toast } = useToast()
 
   // Filter users based on search term
@@ -56,6 +62,16 @@ export default function UserManagement() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setCurrentUser(null)
+  }
+
+  const handleOpenRoleModal = () => {
+    setNewRole("")
+    setNewRoleDescription("")
+    setIsRoleModalOpen(true)
+  }
+
+  const handleCloseRoleModal = () => {
+    setIsRoleModalOpen(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,70 +120,158 @@ export default function UserManagement() {
     }
   }
 
+  const handleAddRole = () => {
+    if (!newRole.trim()) {
+      toast({
+        title: "Error",
+        description: "Role name cannot be empty",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (roles.includes(newRole as UserRole)) {
+      toast({
+        title: "Error",
+        description: "Role already exists",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Add the new role
+    setRoles((prev) => [...prev, newRole as UserRole])
+
+    toast({
+      title: "Role added",
+      description: `${newRole} role has been added successfully.`,
+    })
+
+    handleCloseRoleModal()
+  }
+
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>User Management</CardTitle>
-          <Button onClick={() => handleOpenModal()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search users..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
+      <Tabs defaultValue="users" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="roles">Roles</TabsTrigger>
+        </TabsList>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-800">
-                  <th className="text-left font-medium p-2">Name</th>
-                  <th className="text-left font-medium p-2">Email</th>
-                  <th className="text-left font-medium p-2">Role</th>
-                  <th className="text-right font-medium p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100 dark:border-gray-800">
-                    <td className="p-2">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                          <UserIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                        </div>
-                        <div className="font-medium">{user.name}</div>
-                      </div>
-                    </td>
-                    <td className="p-2">{user.email}</td>
-                    <td className="p-2 capitalize">{user.role}</td>
-                    <td className="p-2 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenModal(user)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(user.id)}>
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="users">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>User Management</CardTitle>
+              <Button onClick={() => handleOpenModal()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search users..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-800">
+                      <th className="text-left font-medium p-2">Name</th>
+                      <th className="text-left font-medium p-2">Email</th>
+                      <th className="text-left font-medium p-2">Role</th>
+                      <th className="text-right font-medium p-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-b border-gray-100 dark:border-gray-800">
+                        <td className="p-2">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                              <UserIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                            </div>
+                            <div className="font-medium">{user.name}</div>
+                          </div>
+                        </td>
+                        <td className="p-2">{user.email}</td>
+                        <td className="p-2 capitalize">{user.role}</td>
+                        <td className="p-2 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenModal(user)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(user.id)}>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="roles">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Role Management</CardTitle>
+              <Button onClick={handleOpenRoleModal}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Role
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-800">
+                      <th className="text-left font-medium p-2">Role Name</th>
+                      <th className="text-left font-medium p-2">Users</th>
+                      <th className="text-right font-medium p-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roles.map((role) => (
+                      <tr key={role} className="border-b border-gray-100 dark:border-gray-800">
+                        <td className="p-2 capitalize">{role}</td>
+                        <td className="p-2">{users.filter((user) => user.role === role).length}</td>
+                        <td className="p-2 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" disabled={role === "admin" || role === "employee"}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={
+                                role === "admin" || role === "employee" || users.some((user) => user.role === role)
+                              }
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
         <DialogContent className="sm:max-w-[500px]">
@@ -192,13 +296,16 @@ export default function UserManagement() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <Select value={formData.role} onValueChange={(value) => handleSelectChange("role", value as UserRole)}>
+              <Select value={formData.role} onValueChange={(value) => handleSelectChange("role", value)}>
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                  <SelectItem value="employee">Employee</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role} value={role} className="capitalize">
+                      {role}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -221,6 +328,41 @@ export default function UserManagement() {
                 Cancel
               </Button>
               <Button type="submit">{currentUser ? "Update User" : "Create User"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRoleModalOpen} onOpenChange={handleCloseRoleModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Role</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleAddRole()
+            }}
+            className="space-y-4 py-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="roleName">Role Name</Label>
+              <Input id="roleName" value={newRole} onChange={(e) => setNewRole(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="roleDescription">Description (Optional)</Label>
+              <Textarea
+                id="roleDescription"
+                value={newRoleDescription}
+                onChange={(e) => setNewRoleDescription(e.target.value)}
+                placeholder="Describe the permissions and responsibilities of this role"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseRoleModal}>
+                Cancel
+              </Button>
+              <Button type="submit">Create Role</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -3,10 +3,24 @@
 import { useState } from "react"
 import AppLayout from "@/components/layout/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { documents } from "@/lib/mock-data"
+import { documents as initialDocuments } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
-import { Download, File, FileText, ImageIcon, Search, Trash, Upload } from "lucide-react"
-import type { DocumentRelationType } from "@/lib/types"
+import { Download, File, FileText, Filter, Grid, ImageIcon, List, Plus, Search, Trash, Upload, X } from "lucide-react"
+import type { Document, DocumentRelationType } from "@/lib/types"
+import DocumentModal from "@/components/modals/document-modal"
+import { useToast } from "@/components/ui/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
 
 const documentTypeIcons: Record<string, any> = {
   "application/pdf": FileText,
@@ -21,13 +35,25 @@ const relatedTypeLabels: Record<DocumentRelationType, string> = {
 }
 
 export default function DocumentsPage() {
+  const [documents, setDocuments] = useState<Document[]>(initialDocuments)
   const [searchTerm, setSearchTerm] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentDocument, setCurrentDocument] = useState<Document | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
+  const [filterType, setFilterType] = useState<string | null>(null)
+  const { toast } = useToast()
 
-  // Filter documents based on search term
-  const filteredDocuments = documents.filter((document) =>
-    document.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // Get all unique document types
+  const documentTypes = Array.from(new Set(documents.map((doc) => doc.type.split("/")[1])))
+
+  // Filter documents based on search term and type filter
+  const filteredDocuments = documents.filter((document) => {
+    const matchesSearch = document.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesType = filterType ? document.type.includes(filterType) : true
+    return matchesSearch && matchesType
+  })
 
   // Get icon for document type
   const getDocumentIcon = (type: string) => {
@@ -42,13 +68,74 @@ export default function DocumentsPage() {
     else return (bytes / (1024 * 1024)).toFixed(1) + " MB"
   }
 
+  // Handle document save
+  const handleSaveDocument = (data: Partial<Document>) => {
+    if (currentDocument) {
+      // Update existing document
+      const updatedDocuments = documents.map((doc) => (doc.id === currentDocument.id ? { ...doc, ...data } : doc))
+      setDocuments(updatedDocuments)
+      toast({
+        title: "Document updated",
+        description: `${data.name} has been updated successfully.`,
+      })
+    } else {
+      // Add new document
+      const newDocument: Document = {
+        id: `doc-${Date.now()}`,
+        name: data.name || "Untitled Document",
+        type: data.type || "application/pdf",
+        size: data.size || 0,
+        url: data.url || "",
+        uploadedAt: new Date(),
+        relatedTo: data.relatedTo,
+      }
+      setDocuments([newDocument, ...documents])
+      toast({
+        title: "Document uploaded",
+        description: `${newDocument.name} has been uploaded successfully.`,
+      })
+    }
+    setIsModalOpen(false)
+    setCurrentDocument(null)
+  }
+
+  // Handle document delete
+  const handleDeleteDocument = () => {
+    if (documentToDelete) {
+      const updatedDocuments = documents.filter((doc) => doc.id !== documentToDelete.id)
+      setDocuments(updatedDocuments)
+      toast({
+        title: "Document deleted",
+        description: `${documentToDelete.name} has been deleted successfully.`,
+      })
+      setDeleteDialogOpen(false)
+      setDocumentToDelete(null)
+    }
+  }
+
+  // Handle document download
+  const handleDownloadDocument = (document: Document) => {
+    // In a real app, this would trigger a download from the server
+    // For this mock, we'll just show a toast
+    toast({
+      title: "Download started",
+      description: `${document.name} is being downloaded.`,
+    })
+  }
+
+  // Open delete confirmation dialog
+  const confirmDelete = (document: Document) => {
+    setDocumentToDelete(document)
+    setDeleteDialogOpen(true)
+  }
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-bold">Documents</h1>
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-grow sm:flex-grow-0">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
               <input
                 type="text"
@@ -58,6 +145,32 @@ export default function DocumentsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <Filter className="h-4 w-4" />
+                  {filterType ? `Filter: ${filterType}` : "Filter"}
+                  {filterType && (
+                    <X
+                      className="h-3 w-3 ml-1 hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setFilterType(null)
+                      }}
+                    />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {documentTypes.map((type) => (
+                  <DropdownMenuItem key={type} onClick={() => setFilterType(type)}>
+                    {type.toUpperCase()}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <div className="flex border border-gray-200 dark:border-gray-800 rounded-md">
               <Button
                 variant="ghost"
@@ -65,7 +178,7 @@ export default function DocumentsPage() {
                 className={viewMode === "grid" ? "bg-gray-100 dark:bg-gray-800" : ""}
                 onClick={() => setViewMode("grid")}
               >
-                Grid
+                <Grid className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -73,10 +186,16 @@ export default function DocumentsPage() {
                 className={viewMode === "list" ? "bg-gray-100 dark:bg-gray-800" : ""}
                 onClick={() => setViewMode("list")}
               >
-                List
+                <List className="h-4 w-4" />
               </Button>
             </div>
-            <Button>
+
+            <Button
+              onClick={() => {
+                setCurrentDocument(null)
+                setIsModalOpen(true)
+              }}
+            >
               <Upload className="h-4 w-4 mr-2" />
               Upload
             </Button>
@@ -85,13 +204,46 @@ export default function DocumentsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>All Documents</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>All Documents ({filteredDocuments.length})</span>
+              {filterType && (
+                <Badge variant="outline" className="ml-2">
+                  Filtered by: {filterType}
+                  <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setFilterType(null)} />
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {viewMode === "grid" ? (
+            {filteredDocuments.length === 0 ? (
+              <div className="text-center py-8">
+                <File className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                <h3 className="text-lg font-medium">No documents found</h3>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  {searchTerm || filterType
+                    ? "Try adjusting your search or filters"
+                    : "Upload your first document to get started"}
+                </p>
+                {!searchTerm && !filterType && (
+                  <Button
+                    className="mt-4"
+                    onClick={() => {
+                      setCurrentDocument(null)
+                      setIsModalOpen(true)
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Upload Document
+                  </Button>
+                )}
+              </div>
+            ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredDocuments.map((document) => (
-                  <div key={document.id} className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                  <div
+                    key={document.id}
+                    className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 transition-all hover:shadow-md"
+                  >
                     <div className="flex items-center justify-center h-24 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4">
                       {getDocumentIcon(document.type)}
                     </div>
@@ -109,11 +261,21 @@ export default function DocumentsPage() {
                         </div>
                       )}
                       <div className="flex gap-2 pt-2">
-                        <Button variant="outline" size="sm" className="w-full">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleDownloadDocument(document)}
+                        >
                           <Download className="h-3 w-3 mr-1" />
                           Download
                         </Button>
-                        <Button variant="outline" size="sm" className="text-red-500 dark:text-red-400">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 dark:text-red-400"
+                          onClick={() => confirmDelete(document)}
+                        >
                           <Trash className="h-3 w-3" />
                         </Button>
                       </div>
@@ -136,7 +298,10 @@ export default function DocumentsPage() {
                   </thead>
                   <tbody>
                     {filteredDocuments.map((document) => (
-                      <tr key={document.id} className="border-b border-gray-100 dark:border-gray-800">
+                      <tr
+                        key={document.id}
+                        className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                      >
                         <td className="p-2">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -159,10 +324,25 @@ export default function DocumentsPage() {
                         </td>
                         <td className="p-2 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(document)}>
                               <Download className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setCurrentDocument(document)
+                                setIsModalOpen(true)
+                              }}
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => confirmDelete(document)}
+                              className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                            >
                               <Trash className="h-4 w-4" />
                             </Button>
                           </div>
@@ -176,6 +356,37 @@ export default function DocumentsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Document Upload/Edit Modal */}
+      <DocumentModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setCurrentDocument(null)
+        }}
+        document={currentDocument}
+        relatedType="attraction"
+        relatedId="none"
+        onSave={handleSaveDocument}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the document "{documentToDelete?.name}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteDocument} className="bg-red-500 hover:bg-red-600 text-white">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   )
 }

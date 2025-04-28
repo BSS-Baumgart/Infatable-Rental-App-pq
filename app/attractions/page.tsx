@@ -10,6 +10,7 @@ import Image from "next/image"
 import AttractionModal from "@/components/modals/attraction-modal"
 import { useToast } from "@/components/ui/use-toast"
 import type { Attraction } from "@/lib/types"
+import { useRouter } from "next/navigation"
 
 export default function AttractionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -17,6 +18,7 @@ export default function AttractionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentAttraction, setCurrentAttraction] = useState<Attraction | null>(null)
   const { toast } = useToast()
+  const router = useRouter()
 
   // Filter attractions based on search term
   const filteredAttractions = attractions.filter((attraction) =>
@@ -69,6 +71,10 @@ export default function AttractionsPage() {
     }
   }
 
+  const navigateToAttractionDetail = (id: string) => {
+    router.push(`/attractions/${id}`)
+  }
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -95,7 +101,10 @@ export default function AttractionsPage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredAttractions.map((attraction) => (
             <Card key={attraction.id} className="overflow-hidden">
-              <div className="aspect-video relative">
+              <div
+                className="aspect-video relative cursor-pointer"
+                onClick={() => navigateToAttractionDetail(attraction.id)}
+              >
                 <Image
                   src={attraction.image || "/placeholder.svg?height=300&width=300&query=bouncy%20castle"}
                   alt={attraction.name}
@@ -104,7 +113,12 @@ export default function AttractionsPage() {
                 />
               </div>
               <CardHeader>
-                <CardTitle>{attraction.name}</CardTitle>
+                <CardTitle
+                  className="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  onClick={() => navigateToAttractionDetail(attraction.id)}
+                >
+                  {attraction.name}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">

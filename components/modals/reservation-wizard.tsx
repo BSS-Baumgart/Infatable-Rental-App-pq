@@ -21,11 +21,18 @@ interface ReservationWizardProps {
   onClose: () => void
   reservation?: ReservationType | null
   onSave: (reservation: Partial<ReservationType>) => void
+  initialDate?: Date | null
 }
 
 const statusOptions: ReservationStatus[] = ["pending", "in-progress", "completed", "cancelled"]
 
-export default function ReservationWizard({ isOpen, onClose, reservation, onSave }: ReservationWizardProps) {
+export default function ReservationWizard({
+  isOpen,
+  onClose,
+  reservation,
+  onSave,
+  initialDate,
+}: ReservationWizardProps) {
   const [step, setStep] = useState(1)
   const [clients, setClients] = useState<Client[]>(initialClients)
   const [clientSearchTerm, setClientSearchTerm] = useState("")
@@ -41,7 +48,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
   })
   const [selectedAttractionId, setSelectedAttractionId] = useState<string>("")
 
-  // Initialize form with reservation data if editing
+  // Initialize form with reservation data if editing or initialDate if creating new
   useEffect(() => {
     if (reservation) {
       setFormData({
@@ -60,14 +67,14 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
         clientId: "",
         attractions: [],
         status: "pending",
-        startDate: new Date(),
-        endDate: new Date(),
+        startDate: initialDate || new Date(),
+        endDate: initialDate || new Date(),
         totalPrice: 0,
         notes: "",
       })
     }
     setStep(1)
-  }, [reservation, isOpen])
+  }, [reservation, isOpen, initialDate])
 
   // Calculate total price based on selected attractions
   useEffect(() => {
@@ -205,7 +212,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{reservation ? "Edit Reservation" : "New Reservation"}</DialogTitle>
           </DialogHeader>
@@ -282,10 +289,10 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
             <form onSubmit={handleSaveReservation}>
               {/* Step 1: Client Selection */}
               {step === 1 && (
-                <div className="space-y-4">
+                <div className="space-y-4 md:space-y-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium">Select Client</h3>
-                    <Button type="button" size="sm" onClick={() => setIsClientModalOpen(true)}>
+                    <Button type="button" size="sm" className="py-2" onClick={() => setIsClientModalOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
                       New Client
                     </Button>
@@ -296,7 +303,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                     <Input
                       type="text"
                       placeholder="Search clients..."
-                      className="pl-8"
+                      className="pl-8 h-10"
                       value={clientSearchTerm}
                       onChange={(e) => setClientSearchTerm(e.target.value)}
                     />
@@ -335,7 +342,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                   </div>
 
                   <div className="flex justify-end mt-6">
-                    <Button type="button" onClick={nextStep} disabled={!formData.clientId}>
+                    <Button type="button" className="py-2" onClick={nextStep} disabled={!formData.clientId}>
                       Next
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -345,7 +352,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
 
               {/* Step 2: Attractions and Dates */}
               {step === 2 && (
-                <div className="space-y-4">
+                <div className="space-y-4 md:space-y-6">
                   <h3 className="text-lg font-medium mb-4">Select Attractions & Dates</h3>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -355,6 +362,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                         type="date"
                         id="startDate"
                         name="startDate"
+                        className="h-10"
                         value={formData.startDate ? new Date(formData.startDate).toISOString().split("T")[0] : ""}
                         onChange={(e) => handleDateChange("startDate", e.target.value)}
                       />
@@ -365,6 +373,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                         type="date"
                         id="endDate"
                         name="endDate"
+                        className="h-10"
                         value={formData.endDate ? new Date(formData.endDate).toISOString().split("T")[0] : ""}
                         onChange={(e) => handleDateChange("endDate", e.target.value)}
                       />
@@ -377,7 +386,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                       value={formData.status}
                       onValueChange={(value) => handleSelectChange("status", value as ReservationStatus)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -422,7 +431,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                           }
                         }}
                       >
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger className="flex-1 h-10">
                           <SelectValue placeholder="Add attraction" />
                         </SelectTrigger>
                         <SelectContent>
@@ -454,17 +463,18 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                       value={formData.notes || ""}
                       onChange={handleInputChange}
                       placeholder="Add any additional notes here..."
-                      className="min-h-[100px]"
+                      className="min-h-[100px] h-10"
                     />
                   </div>
 
                   <div className="flex justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={prevStep}>
+                    <Button type="button" variant="outline" className="py-2" onClick={prevStep}>
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
                     <Button
                       type="button"
+                      className="py-2"
                       onClick={nextStep}
                       disabled={!formData.startDate || !formData.endDate || formData.attractions?.length === 0}
                     >
@@ -477,7 +487,7 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
 
               {/* Step 3: Summary */}
               {step === 3 && (
-                <div className="space-y-4">
+                <div className="space-y-4 md:space-y-6">
                   <h3 className="text-lg font-medium mb-4">Reservation Summary</h3>
 
                   <div className="space-y-4">
@@ -566,11 +576,13 @@ export default function ReservationWizard({ isOpen, onClose, reservation, onSave
                   </div>
 
                   <div className="flex justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={prevStep}>
+                    <Button type="button" variant="outline" className="py-2" onClick={prevStep}>
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button type="submit">Save Reservation</Button>
+                    <Button type="submit" className="py-2">
+                      Save Reservation
+                    </Button>
                   </div>
                 </div>
               )}

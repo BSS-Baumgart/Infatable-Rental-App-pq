@@ -1,4 +1,4 @@
-import type { User, Client, Attraction, Reservation, Invoice, Document } from "./types"
+import type { User, Client, Attraction, Reservation, Invoice, Document, MaintenanceRecord } from "./types"
 
 // Mock Users
 export const users: User[] = [
@@ -167,6 +167,55 @@ const getRandomPastDate = (daysAgo = 30): Date => {
   date.setDate(date.getDate() - Math.floor(Math.random() * daysAgo))
   return date
 }
+
+// Mock Maintenance Records
+export const maintenanceRecords: MaintenanceRecord[] = [
+  {
+    id: "1",
+    attractionId: "1",
+    date: getRandomPastDate(60),
+    cost: 120,
+    description: "Regular inspection and cleaning. Replaced worn-out fabric on the left side.",
+    performedBy: "Mike Technician",
+    images: ["/maintenance-image-1.jpg"],
+    createdAt: getRandomPastDate(60),
+  },
+  {
+    id: "2",
+    attractionId: "1",
+    date: getRandomPastDate(30),
+    cost: 85,
+    description: "Fixed air leak and reinforced seams.",
+    performedBy: "Sarah Repair",
+    images: ["/maintenance-image-2.jpg"],
+    createdAt: getRandomPastDate(30),
+  },
+  {
+    id: "3",
+    attractionId: "2",
+    date: getRandomPastDate(45),
+    cost: 150,
+    description: "Complete cleaning and safety inspection. Replaced blower motor.",
+    performedBy: "Mike Technician",
+    images: ["/maintenance-image-3.jpg"],
+    createdAt: getRandomPastDate(45),
+  },
+  {
+    id: "4",
+    attractionId: "3",
+    date: getRandomPastDate(20),
+    cost: 95,
+    description: "Patched small tear and reinforced high-stress areas.",
+    performedBy: "Sarah Repair",
+    images: ["/maintenance-image-4.jpg"],
+    createdAt: getRandomPastDate(20),
+  },
+]
+
+// Add maintenance records to attractions
+attractions.forEach((attraction) => {
+  attraction.maintenanceRecords = maintenanceRecords.filter((record) => record.attractionId === attraction.id)
+})
 
 // Mock Reservations
 export const reservations: Reservation[] = [
