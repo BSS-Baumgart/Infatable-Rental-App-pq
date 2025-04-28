@@ -1,11 +1,11 @@
 "use client"
-
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Bell, ChevronRight } from "lucide-react"
-import UserProfile from "./user-profile"
 import Link from "next/link"
-import { ThemeToggle } from "../theme-toggle"
 import { usePathname } from "next/navigation"
+import UserProfile from "@/components/layout/user-profile"
+import ThemeToggle from "@/components/theme-toggle"
+import { NotificationBadge } from "@/components/ui/notification-badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ChevronRight } from "lucide-react"
 
 interface BreadcrumbItem {
   label: string
@@ -57,13 +57,7 @@ export default function TopNav() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 ml-auto sm:ml-0">
-        <button
-          type="button"
-          className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-[#1F1F23] rounded-full transition-colors"
-        >
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
-        </button>
-
+        <NotificationBadge />
         <ThemeToggle />
 
         <DropdownMenu>

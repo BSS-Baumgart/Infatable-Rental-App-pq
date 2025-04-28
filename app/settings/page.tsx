@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { users } from "@/lib/mock-data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Settings, Users, Shield, Palette } from "lucide-react"
+import { Settings, Users, Shield, Palette, Bell } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import UserManagement from "@/components/settings/user-management"
 import PermissionsManagement from "@/components/settings/permissions-management"
+import NotificationSettings from "@/components/settings/notification-settings"
 import { useThemeContext } from "@/components/theme-provider"
 
 export default function SettingsPage() {
@@ -90,6 +91,10 @@ export default function SettingsPage() {
                 <TabsTrigger value="permissions">
                   <Shield className="h-4 w-4 mr-2" />
                   Permissions
+                </TabsTrigger>
+                <TabsTrigger value="notifications">
+                  <Bell className="h-4 w-4 mr-2" />
+                  Notifications
                 </TabsTrigger>
               </>
             )}
@@ -321,6 +326,12 @@ export default function SettingsPage() {
           {isAdmin && (
             <TabsContent value="permissions">
               <PermissionsManagement />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="notifications">
+              <NotificationSettings />
             </TabsContent>
           )}
         </Tabs>
