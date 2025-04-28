@@ -1,11 +1,16 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 import UserProfile from "@/components/layout/user-profile"
 import ThemeToggle from "@/components/theme-toggle"
 import { NotificationBadge } from "@/components/ui/notification-badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import ReservationWizard from "@/components/modals/reservation-wizard"
+import { useToast } from "@/components/ui/use-toast"
+import type { Reservation } from "@/lib/types"
 
 interface BreadcrumbItem {
   label: string
@@ -14,6 +19,8 @@ interface BreadcrumbItem {
 
 export default function TopNav() {
   const pathname = usePathname()
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false)
+  const { toast } = useToast()
 
   // Generate breadcrumbs based on current path
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
@@ -36,45 +43,84 @@ export default function TopNav() {
 
   const breadcrumbs = generateBreadcrumbs()
 
+  const handleOpenReservationModal = () => {
+    setIsReservationModalOpen(true)
+  }
+
+  const handleCloseReservationModal = () => {
+    setIsReservationModalOpen(false)
+  }
+
+  const handleSaveReservation = (data: Partial<Reservation>) => {
+    // In a real app, this would update the reservation in the database
+    toast({
+      title: "Reservation created",
+      description: "New reservation has been created successfully.",
+    })
+    handleCloseReservationModal()
+  }
+
   return (
-    <nav className="px-3 sm:px-6 flex items-center justify-between bg-white dark:bg-[#0F0F12] border-b border-gray-200 dark:border-[#1F1F23] h-full">
-      <div className="font-medium text-sm hidden sm:flex items-center space-x-1 truncate max-w-[300px]">
-        {breadcrumbs.map((item, index) => (
-          <div key={item.label} className="flex items-center">
-            {index > 0 && <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400 mx-1" />}
-            {item.href ? (
-              <Link
-                href={item.href}
-                className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <span className="text-gray-900 dark:text-gray-100">{item.label}</span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-2 sm:gap-4 ml-auto sm:ml-0">
-        <NotificationBadge />
-        <ThemeToggle />
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="focus:outline-none">
-            <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900 flex items-center justify-center text-pink-600 dark:text-pink-300 font-medium text-sm">
-              JD
+    <>
+      <nav className="px-3 sm:px-6 flex items-center justify-between bg-white dark:bg-[#0F0F12] border-b border-gray-200 dark:border-[#1F1F23] h-full">
+        <div className="font-medium text-sm hidden sm:flex items-center space-x-1 truncate max-w-[300px]">
+          {breadcrumbs.map((item, index) => (
+            <div key={item.label} className="flex items-center">
+              {index > 0 && <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400 mx-1" />}
+              {item.href ? (
+                <Link
+                  href={item.href}
+                  className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <span className="text-gray-900 dark:text-gray-100">{item.label}</span>
+              )}
             </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            sideOffset={8}
-            className="w-[280px] sm:w-80 bg-background border-border rounded-lg shadow-lg"
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-4 ml-auto sm:ml-0">
+          {/* Quick Add Reservation Button */}
+          <Button
+            type="button"
+            className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-[#1F1F23] rounded-full transition-colors"
+            variant="ghost"
+            onClick={handleOpenReservationModal}
+            title="Quick Add Reservation"
           >
-            <UserProfile />
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </nav>
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
+            <span className="sr-only">Add Reservation</span>
+          </Button>
+
+          <NotificationBadge />
+          <ThemeToggle />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger className="focus:outline-none">
+              <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-600 dark:text-orange-300 font-medium text-sm">
+                JD
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              className="w-[280px] sm:w-80 bg-background border-border rounded-lg shadow-lg"
+            >
+              <UserProfile />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </nav>
+
+      {/* Reservation Wizard Modal */}
+      <ReservationWizard
+        isOpen={isReservationModalOpen}
+        onClose={handleCloseReservationModal}
+        reservation={null}
+        onSave={handleSaveReservation}
+      />
+    </>
   )
 }
