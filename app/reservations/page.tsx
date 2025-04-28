@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import AppLayout from "@/components/layout/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { reservations as initialReservations, clients } from "@/lib/mock-data"
@@ -27,6 +28,7 @@ export default function ReservationsPage() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null)
   const { toast } = useToast()
+  const router = useRouter()
 
   // Filter reservations based on search term and status
   const filteredReservations = reservations.filter((reservation) => {
@@ -57,6 +59,10 @@ export default function ReservationsPage() {
 
   const handleCloseInvoiceModal = () => {
     setIsInvoiceModalOpen(false)
+  }
+
+  const handleViewReservation = (id: string) => {
+    router.push(`/reservations/${id}`)
   }
 
   const handleSaveReservation = (data: Partial<Reservation>) => {
@@ -107,6 +113,10 @@ export default function ReservationsPage() {
         description: `Reservation #${id} has been deleted.`,
       })
     }
+  }
+
+  const handleReservationClick = (id: string) => {
+    router.push(`/reservations/${id}`)
   }
 
   return (
@@ -190,7 +200,11 @@ export default function ReservationsPage() {
                 </thead>
                 <tbody>
                   {filteredReservations.map((reservation) => (
-                    <tr key={reservation.id} className="border-b border-gray-100 dark:border-gray-800">
+                    <tr
+                      key={reservation.id}
+                      className="border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      onClick={() => handleReservationClick(reservation.id)}
+                    >
                       <td className="p-2">{reservation.id}</td>
                       <td className="p-2">
                         {reservation.client
@@ -210,10 +224,17 @@ export default function ReservationsPage() {
                       </td>
                       <td className="p-2 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleOpenReservationModal(reservation)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleViewReservation(reservation.id)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleOpenReservationModal(reservation)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleOpenReservationModal(reservation)
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleOpenInvoiceModal(reservation)}>

@@ -15,6 +15,7 @@ import { X, Plus, User, Package, FileText, ChevronRight, ChevronLeft, Search } f
 import type { ReservationStatus, Client, Reservation as ReservationType } from "@/lib/types"
 import ClientModal from "./client-modal"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
 
 interface ReservationWizardProps {
   isOpen: boolean
@@ -47,6 +48,7 @@ export default function ReservationWizard({
     notes: "",
   })
   const [selectedAttractionId, setSelectedAttractionId] = useState<string>("")
+  const router = useRouter()
 
   // Initialize form with reservation data if editing or initialDate if creating new
   useEffect(() => {
@@ -218,7 +220,7 @@ export default function ReservationWizard({
           </DialogHeader>
 
           <div className="py-4">
-            {/* Stepper */}
+            {/* Stepper - Updated with rounded design */}
             <div className="mb-8">
               <div className="flex justify-between">
                 <div
@@ -241,7 +243,7 @@ export default function ReservationWizard({
                   <div
                     className={`h-1 w-full ${
                       step > 1 ? "bg-primary" : "bg-gray-200 dark:bg-gray-800"
-                    } transition-colors duration-300`}
+                    } transition-colors duration-300 rounded-full`}
                   ></div>
                 </div>
                 <div
@@ -264,7 +266,7 @@ export default function ReservationWizard({
                   <div
                     className={`h-1 w-full ${
                       step > 2 ? "bg-primary" : "bg-gray-200 dark:bg-gray-800"
-                    } transition-colors duration-300`}
+                    } transition-colors duration-300 rounded-full`}
                   ></div>
                 </div>
                 <div

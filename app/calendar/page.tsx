@@ -1,6 +1,9 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import AppLayout from "@/components/layout/app-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { reservations } from "@/lib/mock-data"
@@ -30,6 +33,7 @@ export default function CalendarPage() {
   const [view, setView] = useState<CalendarView>("month")
   const { toast } = useToast()
   const isMobile = useIsMobile()
+  const router = useRouter()
 
   // Set default view based on screen size
   useEffect(() => {
@@ -127,6 +131,14 @@ export default function CalendarPage() {
     handleOpenModal(undefined, day)
   }
 
+  const handleReservationClick = (reservation: Reservation, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation() // Prevent triggering the day click
+    }
+    // Navigate to reservation details page
+    router.push(`/reservations/${reservation.id}`)
+  }
+
   const handleSaveReservation = (data: Partial<Reservation>) => {
     // In a real app, this would update the reservation in the database
     toast({
@@ -140,6 +152,11 @@ export default function CalendarPage() {
 
   const toggleView = () => {
     setView(view === "month" ? "list" : "month")
+  }
+
+  const handleEventClick = (info: any) => {
+    const reservationId = info.event.id
+    router.push(`/reservations/${reservationId}`)
   }
 
   return (
@@ -214,10 +231,7 @@ export default function CalendarPage() {
                             <div
                               key={reservation.id}
                               className="text-xs p-1 rounded truncate cursor-pointer hover:opacity-80"
-                              onClick={(e) => {
-                                e.stopPropagation() // Prevent triggering the day click
-                                handleOpenModal(reservation)
-                              }}
+                              onClick={(e) => handleReservationClick(reservation, e)}
                             >
                               <Badge className={`${statusColors[reservation.status]} w-full justify-between`}>
                                 <span className="truncate">{reservation.client.lastName}</span>
@@ -255,7 +269,7 @@ export default function CalendarPage() {
                           <div
                             key={reservation.id}
                             className="p-3 border rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                            onClick={() => handleOpenModal(reservation)}
+                            onClick={() => handleReservationClick(reservation)}
                           >
                             <div className="flex items-center justify-between">
                               <div>

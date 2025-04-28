@@ -18,6 +18,8 @@ export default function ReservationDetailPage({ params }: { params: { id: string
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false)
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -26,6 +28,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
     const foundReservation = allReservations.find((r) => r.id === params.id)
     if (foundReservation) {
       setReservation(foundReservation)
+      setSelectedReservation(foundReservation)
     }
   }, [params.id])
 
@@ -106,7 +109,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
               <FileText className="mr-2 h-4 w-4" />
               Create Invoice
             </Button>
-            <Button onClick={handleOpenReservationModal}>
+            <Button onClick={() => setIsEditModalOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit Reservation
             </Button>
@@ -318,6 +321,15 @@ export default function ReservationDetailPage({ params }: { params: { id: string
         reservationId={reservation.id}
         onSave={handleSaveInvoice}
       />
+
+      {isEditModalOpen && selectedReservation && (
+        <ReservationWizard
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          reservation={selectedReservation}
+          onSave={handleSaveReservation}
+        />
+      )}
     </AppLayout>
   )
 }
