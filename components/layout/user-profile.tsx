@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import { LogOut, MoveUpRight, Settings, User, Shield } from "lucide-react"
 import Link from "next/link"
@@ -37,7 +39,7 @@ export default function UserProfile() {
         <div className="relative px-6 pt-12 pb-6">
           <div className="flex items-center gap-4 mb-8">
             <div className="relative shrink-0">
-              <div className="w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900 flex items-center justify-center text-pink-600 dark:text-pink-300 font-medium text-xl">
+              <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-600 dark:text-orange-300 font-medium text-xl">
                 JD
               </div>
               <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
@@ -56,8 +58,8 @@ export default function UserProfile() {
                 key={item.label}
                 href={item.href}
                 className="flex items-center justify-between p-2 
-                                    hover:bg-zinc-50 dark:hover:bg-zinc-800/50 
-                                    rounded-lg transition-colors duration-200"
+                                  hover:bg-zinc-50 dark:hover:bg-zinc-800/50 
+                                  rounded-lg transition-colors duration-200"
               >
                 <div className="flex items-center gap-2">
                   {item.icon}
@@ -73,8 +75,8 @@ export default function UserProfile() {
             <button
               type="button"
               className="w-full flex items-center justify-between p-2 
-                                hover:bg-zinc-50 dark:hover:bg-zinc-800/50 
-                                rounded-lg transition-colors duration-200"
+                              hover:bg-zinc-50 dark:hover:bg-zinc-800/50 
+                              rounded-lg transition-colors duration-200"
             >
               <div className="flex items-center gap-2">
                 <LogOut className="w-4 h-4" />

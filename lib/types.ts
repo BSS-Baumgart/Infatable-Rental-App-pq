@@ -1,5 +1,16 @@
-// User types
-export type UserRole = "admin" | "employee" | "manager" | "viewer" | string
+export type ReservationStatus = "pending" | "in-progress" | "completed" | "cancelled"
+
+export type InvoiceStatus = "paid" | "unpaid"
+
+export type DocumentRelationType = "attraction" | "reservation"
+
+export interface ReservationAttraction {
+  attractionId: string
+  attraction: Attraction
+  quantity: number
+}
+
+export type UserRole = "admin" | "employee" | "manager" | "viewer"
 
 export interface User {
   id: string
@@ -7,13 +18,8 @@ export interface User {
   email: string
   role: UserRole
   avatar?: string
-  permissions?: {
-    components: Record<string, boolean>
-    actions: Record<string, Record<string, boolean>>
-  }
 }
 
-// Client types
 export interface Client {
   id: string
   firstName: string
@@ -27,46 +33,23 @@ export interface Client {
   createdAt: Date
 }
 
-// Maintenance types
-export interface MaintenanceRecord {
-  id: string
-  attractionId: string
-  date: Date
-  cost: number
-  description: string
-  performedBy: string
-  images?: string[]
-  createdAt: Date
-}
-
-// Attraction types
 export interface Attraction {
   id: string
   name: string
-  width: number // in cm
-  height: number // in cm
-  length: number // in cm
-  weight: number // in kg
+  width: number
+  height: number
+  length: number
+  weight: number
   price: number
-  setupTime: number // in minutes
+  setupTime: number
   image?: string
-  documents?: Document[]
   maintenanceRecords?: MaintenanceRecord[]
-}
-
-// Reservation types
-export type ReservationStatus = "pending" | "in-progress" | "completed" | "cancelled"
-
-export interface ReservationAttraction {
-  attractionId: string
-  attraction: Attraction
-  quantity: number
 }
 
 export interface Reservation {
   id: string
   clientId: string
-  client: Client
+  client?: Client
   attractions: ReservationAttraction[]
   status: ReservationStatus
   startDate: Date
@@ -77,15 +60,12 @@ export interface Reservation {
   updatedAt: Date
 }
 
-// Invoice types
-export type InvoiceStatus = "paid" | "unpaid"
-
 export interface Invoice {
   id: string
   reservationId: string
-  reservation: Reservation
-  clientId: string
-  client: Client
+  reservation?: Reservation
+  clientId?: string
+  client?: Client
   issueDate: Date
   dueDate: Date
   amount: number
@@ -93,20 +73,27 @@ export interface Invoice {
   pdfUrl?: string
 }
 
-// Document types
-export type DocumentRelationType = "attraction" | "reservation"
-
-export interface DocumentRelation {
-  type: DocumentRelationType
-  id: string
-}
-
 export interface Document {
   id: string
   name: string
   type: string
-  size: number // in bytes
+  size: number
   url: string
   uploadedAt: Date
-  relatedTo?: DocumentRelation
+  relatedTo?: {
+    type: DocumentRelationType
+    id: string
+  }
+  description?: string
+}
+
+export interface MaintenanceRecord {
+  id: string
+  attractionId: string
+  date: Date
+  description: string
+  cost: number
+  performedBy: string
+  images?: string[]
+  createdAt: Date
 }

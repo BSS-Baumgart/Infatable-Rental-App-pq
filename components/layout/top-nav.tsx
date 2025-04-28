@@ -1,7 +1,6 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 import UserProfile from "@/components/layout/user-profile"
 import ThemeToggle from "@/components/theme-toggle"
 import { NotificationBadge } from "@/components/ui/notification-badge"
@@ -10,6 +9,7 @@ import { ChevronRight, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ReservationWizard from "@/components/modals/reservation-wizard"
 import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react"
 import type { Reservation } from "@/lib/types"
 
 interface BreadcrumbItem {
@@ -17,7 +17,7 @@ interface BreadcrumbItem {
   href?: string
 }
 
-export default function TopNav() {
+export function TopNav() {
   const pathname = usePathname()
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false)
   const { toast } = useToast()

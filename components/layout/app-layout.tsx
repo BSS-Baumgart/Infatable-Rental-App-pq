@@ -1,8 +1,8 @@
 "use client"
 
 import { type ReactNode, useState, useEffect } from "react"
-import AppSidebar from "./app-sidebar"
-import TopNav from "./top-nav"
+import { AppSidebar } from "./app-sidebar"
+import { TopNav } from "./top-nav"
 import { useTheme } from "next-themes"
 
 interface AppLayoutProps {

@@ -21,7 +21,7 @@ import { usePathname } from "next/navigation"
 import { users } from "@/lib/mock-data"
 import { useThemeContext } from "@/components/theme-provider"
 
-export default function AppSidebar() {
+export function AppSidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const pathname = usePathname()
