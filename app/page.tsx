@@ -2,13 +2,19 @@
 
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowRight, Calendar, CheckCircle, Star } from "lucide-react"
+import { ArrowRight, Calendar, CheckCircle, Menu, Star, X } from "lucide-react"
 import { attractions } from "@/lib/mock-data"
 import { LanguageSelector } from "@/components/language-selector"
 import { useTranslation } from "@/lib/i18n/translation-context"
+import { useState } from "react"
 
 export default function LandingPage() {
   const { t, language } = useTranslation()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen)
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -48,27 +54,51 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <span className="sr-only">Open menu</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6"
-              >
-                <line x1="4" x2="20" y1="12" y2="12" />
-                <line x1="4" x2="20" y1="6" y2="6" />
-                <line x1="4" x2="20" y1="18" y2="18" />
-              </svg>
+            <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+              <span className="sr-only">{mobileMenuOpen ? t("common.closeMenu") : t("common.openMenu")}</span>
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <Link
+                href="/#attractions"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.attractions")}
+              </Link>
+              <Link
+                href="/#how-it-works"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.howItWorks")}
+              </Link>
+              <Link
+                href="/client-reservation"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.bookNow")}
+              </Link>
+              <div className="px-3 py-2">
+                <LanguageSelector variant="landing" />
+              </div>
+              <Link
+                href="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.login")}
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}

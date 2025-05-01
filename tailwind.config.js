@@ -33,7 +33,7 @@ module.exports = {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
+          DEFAULT: "hsl(30, 100%, 50%)", // Pomarańczowy kolor akcentu
           foreground: "hsl(var(--accent-foreground))",
         },
         popover: {

@@ -2,21 +2,27 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { attractions } from "@/lib/mock-data"
-import { ArrowLeft, ArrowRight, Calendar, CheckCircle, Package, User } from "lucide-react"
+import { ArrowLeft, ArrowRight, Calendar, CheckCircle, Menu, Package, User, X } from "lucide-react"
 import Link from "next/link"
 import { sendConfirmationEmail, generateConfirmationCode } from "@/lib/email-service"
 import { toast } from "@/components/ui/use-toast"
 import { useTranslation } from "@/lib/i18n/translation-context"
+import { LanguageSelector } from "@/components/language-selector"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { pl, enUS } from "date-fns/locale"
+import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 
 export default function ClientReservation() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -28,12 +34,22 @@ export default function ClientReservation() {
     postalCode: "",
     startDate: "",
     endDate: "",
+    isAllDay: true,
     selectedAttractions: [] as string[],
     notes: "",
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [confirmationCode, setConfirmationCode] = useState("")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Dodajemy stany do kontrolowania kalendarzy
+  const [startDateCalendarOpen, setStartDateCalendarOpen] = useState(false)
+  const [endDateCalendarOpen, setEndDateCalendarOpen] = useState(false)
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen)
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -60,7 +76,80 @@ export default function ClientReservation() {
     })
   }
 
+  const handleDateChange = (date: Date | undefined, field: "startDate" | "endDate") => {
+    if (!date) return
+
+    const formattedDate = format(date, "yyyy-MM-dd")
+
+    setFormData((prev) => {
+      // If start date is being set and it's after the end date, update end date too
+      if (field === "startDate" && prev.endDate && formattedDate > prev.endDate) {
+        return { ...prev, [field]: formattedDate, endDate: formattedDate }
+      }
+
+      // If end date is being set and it's before the start date, update start date too
+      if (field === "endDate" && prev.startDate && formattedDate < prev.startDate) {
+        return { ...prev, [field]: formattedDate, startDate: formattedDate }
+      }
+
+      return { ...prev, [field]: formattedDate }
+    })
+
+    // Zamykamy kalendarz po wyborze daty
+    if (field === "startDate") {
+      setStartDateCalendarOpen(false)
+      // Jeśli data końcowa nie jest ustawiona, otwieramy kalendarz daty końcowej
+      if (!formData.endDate) {
+        setTimeout(() => setEndDateCalendarOpen(true), 100)
+      }
+    } else {
+      setEndDateCalendarOpen(false)
+    }
+  }
+
+  const toggleAllDay = () => {
+    setFormData((prev) => ({ ...prev, isAllDay: !prev.isAllDay }))
+  }
+
   const nextStep = () => {
+    // Sprawdzamy warunki dla każdego kroku przed przejściem dalej
+    if (step === 1) {
+      if (!formData.startDate || !formData.endDate) {
+        toast({
+          title: t("common.error"),
+          description: t("common.fillAllFields"),
+          variant: "destructive",
+        })
+        return
+      }
+    } else if (step === 2) {
+      if (formData.selectedAttractions.length === 0) {
+        toast({
+          title: t("common.error"),
+          description: t("common.fillAllFields"),
+          variant: "destructive",
+        })
+        return
+      }
+    } else if (step === 3) {
+      if (
+        !formData.firstName ||
+        !formData.lastName ||
+        !formData.email ||
+        !formData.phone ||
+        !formData.address ||
+        !formData.city ||
+        !formData.postalCode
+      ) {
+        toast({
+          title: t("common.error"),
+          description: t("common.fillAllFields"),
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
     if (step < 4) setStep(step + 1)
   }
 
@@ -70,6 +159,28 @@ export default function ClientReservation() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Sprawdź czy wszystkie wymagane pola są wypełnione
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.address ||
+      !formData.city ||
+      !formData.postalCode ||
+      !formData.startDate ||
+      !formData.endDate ||
+      formData.selectedAttractions.length === 0
+    ) {
+      toast({
+        title: t("common.error"),
+        description: t("common.fillAllFields"),
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -132,41 +243,131 @@ export default function ClientReservation() {
 
   const totalPrice = selectedAttractionObjects.reduce((sum, attraction) => sum + attraction.price, 0)
 
+  // Get the appropriate locale for date formatting
+  const getLocale = () => {
+    return language === "pl" ? pl : enUS
+  }
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    if (!dateString) return ""
+    const date = new Date(dateString)
+    return format(date, "PPP", { locale: getLocale() })
+  }
+
+  // Check if start and end dates are the same
+  const isSameDay = formData.startDate && formData.endDate && formData.startDate === formData.endDate
+
+  const startDateRef = useRef<HTMLDivElement>(null)
+  const endDateRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (startDateRef.current && !startDateRef.current.contains(event.target as Node) && startDateCalendarOpen) {
+        setStartDateCalendarOpen(false)
+      }
+
+      if (endDateRef.current && !endDateRef.current.contains(event.target as Node) && endDateCalendarOpen) {
+        setEndDateCalendarOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [startDateCalendarOpen, endDateCalendarOpen])
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Simple Navigation */}
+      {/* Navigation - Same as on the home page */}
       <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center">
-            <h1 className="text-2xl font-bold text-orange-500">BouncyRent</h1>
-          </Link>
+          <div className="flex items-center">
+            <Link href="/">
+              <h1 className="text-2xl font-bold text-orange-500">BouncyRent</h1>
+            </Link>
+          </div>
           <nav className="hidden md:flex items-center space-x-6">
             <Link
               href="/#attractions"
               className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
             >
-              {t("clientReservation.attractions")}
+              {t("nav.attractions")}
             </Link>
             <Link
               href="/#how-it-works"
               className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
             >
-              {t("clientReservation.howItWorks")}
+              {t("nav.howItWorks")}
             </Link>
+            <Link
+              href="/client-reservation"
+              className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
+            >
+              {t("nav.bookNow")}
+            </Link>
+
+            {/* Language Selector */}
+            <LanguageSelector variant="landing" />
+
             <Link href="/login">
               <Button variant="outline" className="ml-4">
-                {t("clientReservation.login")}
+                {t("nav.login")}
               </Button>
             </Link>
           </nav>
+          <div className="md:hidden">
+            <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+              <span className="sr-only">{mobileMenuOpen ? t("common.closeMenu") : t("common.openMenu")}</span>
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <Link
+                href="/#attractions"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.attractions")}
+              </Link>
+              <Link
+                href="/#how-it-works"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.howItWorks")}
+              </Link>
+              <Link
+                href="/client-reservation"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.bookNow")}
+              </Link>
+              <div className="px-3 py-2">
+                <LanguageSelector variant="landing" />
+              </div>
+              <Link
+                href="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-orange-400 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t("nav.login")}
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-            {t("clientReservation.title")}
-          </h1>
+          <h1 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">{t("nav.bookNow")}</h1>
 
           {/* Stepper */}
           <div className="mb-10">
@@ -185,7 +386,7 @@ export default function ClientReservation() {
                 >
                   <Calendar className="h-5 w-5" />
                 </div>
-                <span className="text-xs">{t("clientReservation.step1")}</span>
+                <span className="text-xs">{t("common.date")}</span>
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <div
@@ -208,7 +409,7 @@ export default function ClientReservation() {
                 >
                   <Package className="h-5 w-5" />
                 </div>
-                <span className="text-xs">{t("clientReservation.step2")}</span>
+                <span className="text-xs">{t("nav.attractions")}</span>
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <div
@@ -231,7 +432,7 @@ export default function ClientReservation() {
                 >
                   <User className="h-5 w-5" />
                 </div>
-                <span className="text-xs">{t("clientReservation.step3")}</span>
+                <span className="text-xs">{t("common.yourInfo")}</span>
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <div
@@ -254,7 +455,7 @@ export default function ClientReservation() {
                 >
                   <CheckCircle className="h-5 w-5" />
                 </div>
-                <span className="text-xs">{t("clientReservation.step4")}</span>
+                <span className="text-xs">{t("common.confirm")}</span>
               </div>
             </div>
           </div>
@@ -266,39 +467,119 @@ export default function ClientReservation() {
                   {/* Step 1: Date Selection */}
                   {step === 1 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.selectDates")}</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("common.selectDates")}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="startDate">{t("clientReservation.startDate")}</Label>
-                          <Input
-                            id="startDate"
-                            name="startDate"
-                            type="date"
-                            required
-                            value={formData.startDate}
-                            onChange={handleInputChange}
-                            className="h-10"
-                          />
+                          <Label htmlFor="startDate">{t("common.startDate")}</Label>
+                          <div className="relative" ref={startDateRef}>
+                            <div className="grid gap-2">
+                              <Button
+                                id="startDateButton"
+                                type="button"
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal h-10"
+                                onClick={() => {
+                                  setStartDateCalendarOpen(!startDateCalendarOpen)
+                                  if (endDateCalendarOpen) setEndDateCalendarOpen(false)
+                                }}
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {formData.startDate ? (
+                                  formatDate(formData.startDate)
+                                ) : (
+                                  <span className="text-muted-foreground">{t("common.selectDate")}</span>
+                                )}
+                              </Button>
+                            </div>
+                            {startDateCalendarOpen && (
+                              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={formData.startDate ? new Date(formData.startDate) : undefined}
+                                  onSelect={(date) => handleDateChange(date, "startDate")}
+                                  initialFocus
+                                  locale={getLocale()}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="endDate">{t("clientReservation.endDate")}</Label>
-                          <Input
-                            id="endDate"
-                            name="endDate"
-                            type="date"
-                            required
-                            value={formData.endDate}
-                            onChange={handleInputChange}
-                            className="h-10"
-                          />
+                          <Label htmlFor="endDate">{t("common.endDate")}</Label>
+                          <div className="relative" ref={endDateRef}>
+                            <div className="grid gap-2">
+                              <Button
+                                id="endDateButton"
+                                type="button"
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal h-10"
+                                onClick={() => {
+                                  setEndDateCalendarOpen(!endDateCalendarOpen)
+                                  if (startDateCalendarOpen) setStartDateCalendarOpen(false)
+                                }}
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {formData.endDate ? (
+                                  formatDate(formData.endDate)
+                                ) : (
+                                  <span className="text-muted-foreground">{t("common.selectDate")}</span>
+                                )}
+                              </Button>
+                            </div>
+                            {endDateCalendarOpen && (
+                              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={formData.endDate ? new Date(formData.endDate) : undefined}
+                                  onSelect={(date) => handleDateChange(date, "endDate")}
+                                  initialFocus
+                                  locale={getLocale()}
+                                  disabled={(date) => {
+                                    // Disable dates before start date
+                                    if (!formData.startDate) return false
+                                    return date < new Date(formData.startDate)
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
+
+                      {/* All Day Option - Only show when start and end dates are the same */}
+                      {isSameDay && (
+                        <div className="flex items-center space-x-2 mt-4">
+                          <Switch id="all-day" checked={formData.isAllDay} onCheckedChange={toggleAllDay} />
+                          <Label htmlFor="all-day" className="cursor-pointer">
+                            {t("common.allDay")}
+                          </Label>
+                        </div>
+                      )}
+
                       <div className="pt-4">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t("clientReservation.dateHelp")}</p>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2">
+                          <p>{t("common.dateHelp")}</p>
+
+                          {/* Show selected date range */}
+                          {formData.startDate && formData.endDate && (
+                            <div className="flex flex-wrap gap-2 mt-2 items-center">
+                              <span>{t("common.selected")}:</span>
+                              <Badge
+                                variant="outline"
+                                className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800"
+                              >
+                                {formatDate(formData.startDate)}
+                                {formData.startDate !== formData.endDate && ` - ${formatDate(formData.endDate)}`}
+                                {isSameDay && formData.isAllDay && ` (${t("common.allDay")})`}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       </div>
+
                       <div className="flex justify-end pt-4">
-                        <Button type="button" onClick={nextStep} disabled={!formData.startDate || !formData.endDate}>
-                          {t("clientReservation.next")}
+                        <Button type="button" onClick={nextStep}>
+                          {t("common.next")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
@@ -308,7 +589,7 @@ export default function ClientReservation() {
                   {/* Step 2: Attraction Selection */}
                   {step === 2 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.selectAttractions")}</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("common.selectAttractions")}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {attractions.map((attraction) => (
                           <div
@@ -350,10 +631,10 @@ export default function ClientReservation() {
                       <div className="flex justify-between pt-4">
                         <Button type="button" variant="outline" onClick={prevStep}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
-                          {t("clientReservation.back")}
+                          {t("common.back")}
                         </Button>
-                        <Button type="button" onClick={nextStep} disabled={formData.selectedAttractions.length === 0}>
-                          {t("clientReservation.next")}
+                        <Button type="button" onClick={nextStep}>
+                          {t("common.next")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
@@ -363,10 +644,10 @@ export default function ClientReservation() {
                   {/* Step 3: Contact Information */}
                   {step === 3 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.yourInformation")}</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("common.yourInformation")}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="firstName">{t("clientReservation.firstName")}</Label>
+                          <Label htmlFor="firstName">{t("common.firstName")}</Label>
                           <Input
                             id="firstName"
                             name="firstName"
@@ -377,7 +658,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="lastName">{t("clientReservation.lastName")}</Label>
+                          <Label htmlFor="lastName">{t("common.lastName")}</Label>
                           <Input
                             id="lastName"
                             name="lastName"
@@ -388,7 +669,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email">{t("clientReservation.email")}</Label>
+                          <Label htmlFor="email">{t("common.email")}</Label>
                           <Input
                             id="email"
                             name="email"
@@ -400,7 +681,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="phone">{t("clientReservation.phone")}</Label>
+                          <Label htmlFor="phone">{t("common.phone")}</Label>
                           <Input
                             id="phone"
                             name="phone"
@@ -411,7 +692,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="address">{t("clientReservation.address")}</Label>
+                          <Label htmlFor="address">{t("common.address")}</Label>
                           <Input
                             id="address"
                             name="address"
@@ -422,7 +703,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="city">{t("clientReservation.city")}</Label>
+                          <Label htmlFor="city">{t("common.city")}</Label>
                           <Input
                             id="city"
                             name="city"
@@ -433,7 +714,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="postalCode">{t("clientReservation.postalCode")}</Label>
+                          <Label htmlFor="postalCode">{t("common.postalCode")}</Label>
                           <Input
                             id="postalCode"
                             name="postalCode"
@@ -445,11 +726,11 @@ export default function ClientReservation() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="notes">{t("clientReservation.additionalNotes")}</Label>
+                        <Label htmlFor="notes">{t("common.additionalNotes")}</Label>
                         <Textarea
                           id="notes"
                           name="notes"
-                          placeholder={t("clientReservation.notesPlaceholder")}
+                          placeholder={t("common.notesPlaceholder")}
                           value={formData.notes}
                           onChange={handleInputChange}
                           className="min-h-[100px]"
@@ -458,14 +739,10 @@ export default function ClientReservation() {
                       <div className="flex justify-between pt-4">
                         <Button type="button" variant="outline" onClick={prevStep}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
-                          {t("clientReservation.back")}
+                          {t("common.back")}
                         </Button>
-                        <Button
-                          type="button"
-                          onClick={nextStep}
-                          disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone}
-                        >
-                          {t("clientReservation.next")}
+                        <Button type="button" onClick={nextStep}>
+                          {t("common.next")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
@@ -475,21 +752,27 @@ export default function ClientReservation() {
                   {/* Step 4: Confirmation */}
                   {step === 4 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.confirmReservation")}</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("common.confirmReservation")}</h2>
 
                       <div className="space-y-4">
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">{t("clientReservation.rentalDates")}</h3>
+                          <h3 className="font-medium mb-2">{t("common.rentalDates")}</h3>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>{t("clientReservation.startDate")}:</div>
-                            <div>{formData.startDate}</div>
-                            <div>{t("clientReservation.endDate")}:</div>
-                            <div>{formData.endDate}</div>
+                            <div>{t("common.startDate")}:</div>
+                            <div>{formatDate(formData.startDate)}</div>
+                            <div>{t("common.endDate")}:</div>
+                            <div>{formatDate(formData.endDate)}</div>
+                            {isSameDay && (
+                              <>
+                                <div>{t("common.allDay")}:</div>
+                                <div>{formData.isAllDay ? t("common.yes") : t("common.no")}</div>
+                              </>
+                            )}
                           </div>
                         </div>
 
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">{t("clientReservation.selectedAttractions")}</h3>
+                          <h3 className="font-medium mb-2">{t("common.selectedAttractions")}</h3>
                           <div className="space-y-2">
                             {selectedAttractionObjects.map((attraction) => (
                               <div key={attraction.id} className="flex justify-between">
@@ -498,24 +781,24 @@ export default function ClientReservation() {
                               </div>
                             ))}
                             <div className="border-t pt-2 mt-2 font-bold flex justify-between">
-                              <span>{t("clientReservation.total")}:</span>
+                              <span>{t("common.total")}:</span>
                               <span>${totalPrice}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">{t("clientReservation.yourInfo")}</h3>
+                          <h3 className="font-medium mb-2">{t("common.yourInfo")}</h3>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>{t("clientReservation.name")}:</div>
+                            <div>{t("common.name")}:</div>
                             <div>
                               {formData.firstName} {formData.lastName}
                             </div>
-                            <div>{t("clientReservation.email")}:</div>
+                            <div>{t("common.email")}:</div>
                             <div>{formData.email}</div>
-                            <div>{t("clientReservation.phone")}:</div>
+                            <div>{t("common.phone")}:</div>
                             <div>{formData.phone}</div>
-                            <div>{t("clientReservation.address")}:</div>
+                            <div>{t("common.address")}:</div>
                             <div>
                               {formData.address}, {formData.city}, {formData.postalCode}
                             </div>
@@ -524,14 +807,14 @@ export default function ClientReservation() {
 
                         {formData.notes && (
                           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                            <h3 className="font-medium mb-2">{t("clientReservation.notes")}</h3>
+                            <h3 className="font-medium mb-2">{t("common.notes")}</h3>
                             <p className="text-sm">{formData.notes}</p>
                           </div>
                         )}
 
                         <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
                           <p className="text-sm">
-                            <strong>{t("common.note")}:</strong> {t("clientReservation.paymentNote")}
+                            <strong>{t("common.note")}:</strong> {t("common.paymentNote")}
                           </p>
                         </div>
                       </div>
@@ -539,12 +822,10 @@ export default function ClientReservation() {
                       <div className="flex justify-between pt-4">
                         <Button type="button" variant="outline" onClick={prevStep}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
-                          {t("clientReservation.back")}
+                          {t("common.back")}
                         </Button>
                         <Button type="submit" disabled={isSubmitting}>
-                          {isSubmitting
-                            ? t("clientReservation.submitting")
-                            : t("clientReservation.completeReservation")}
+                          {isSubmitting ? t("common.submitting") : t("common.completeReservation")}
                         </Button>
                       </div>
                     </div>
@@ -555,51 +836,51 @@ export default function ClientReservation() {
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 mb-4">
                     <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">{t("clientReservation.reservationSubmitted")}</h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">{t("clientReservation.thankYou")}</p>
+                  <h2 className="text-2xl font-bold mb-2">{t("common.reservationSubmitted")}</h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">{t("common.thankYou")}</p>
 
                   <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800 mb-6">
                     <p className="font-medium mb-2">
-                      {t("clientReservation.confirmationCode")}{" "}
+                      {t("common.confirmationCode")}{" "}
                       <span className="text-orange-600 dark:text-orange-400">{confirmationCode}</span>
                     </p>
                     <p className="text-sm">
-                      {t("clientReservation.emailSent")} {formData.email}
+                      {t("common.emailSent")} {formData.email}
                     </p>
                   </div>
 
                   <div className="space-y-4">
-                    <p className="font-medium">{t("clientReservation.whatNext")}</p>
+                    <p className="font-medium">{t("common.whatNext")}</p>
                     <ol className="text-left space-y-2 text-gray-600 dark:text-gray-400">
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           1
                         </span>
-                        <span>{t("clientReservation.step1Next")}</span>
+                        <span>{t("common.step1Next")}</span>
                       </li>
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           2
                         </span>
-                        <span>{t("clientReservation.step2Next")}</span>
+                        <span>{t("common.step2Next")}</span>
                       </li>
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           3
                         </span>
-                        <span>{t("clientReservation.step3Next")}</span>
+                        <span>{t("common.step3Next")}</span>
                       </li>
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           4
                         </span>
-                        <span>{t("clientReservation.step4Next")}</span>
+                        <span>{t("common.step4Next")}</span>
                       </li>
                     </ol>
                   </div>
                   <div className="mt-8">
                     <Link href="/">
-                      <Button variant="outline">{t("clientReservation.returnHome")}</Button>
+                      <Button variant="outline">{t("common.returnHome")}</Button>
                     </Link>
                   </div>
                 </div>
