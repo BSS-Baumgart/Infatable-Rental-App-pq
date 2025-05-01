@@ -58,7 +58,7 @@ export default function SettingsPage() {
     }
   }
 
-  const handleAccentColorChange = (color: "pink" | "blue" | "green" | "purple") => {
+  const handleAccentColorChange = (color: "orange" | "blue" | "green" | "purple") => {
     setThemeOptions((prev) => ({ ...prev, accentColor: color }))
   }
 
@@ -272,10 +272,10 @@ export default function SettingsPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div className="flex flex-col items-center">
                             <div
-                              className={`w-12 h-12 rounded-full bg-pink-500 mb-2 cursor-pointer ${themeOptions.accentColor === "pink" ? "ring-2 ring-pink-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
-                              onClick={() => handleAccentColorChange("pink")}
+                              className={`w-12 h-12 rounded-full bg-orange-500 mb-2 cursor-pointer ${themeOptions.accentColor === "orange" ? "ring-2 ring-orange-500 ring-offset-2 dark:ring-offset-gray-900" : ""}`}
+                              onClick={() => handleAccentColorChange("orange")}
                             ></div>
-                            <span className="text-sm">Pink</span>
+                            <span className="text-sm">Orange</span>
                           </div>
                           <div className="flex flex-col items-center">
                             <div

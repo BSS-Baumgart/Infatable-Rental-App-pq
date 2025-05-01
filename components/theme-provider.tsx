@@ -5,7 +5,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes"
 import type { ThemeProviderProps } from "next-themes"
 
 export interface ThemeOptions {
-  accentColor: "pink" | "blue" | "green" | "purple"
+  accentColor: "orange" | "blue" | "green" | "purple"
   compactMode: boolean
   collapsedSidebar: boolean
 }
@@ -19,7 +19,7 @@ export const ThemeContext = React.createContext<ThemeContextType | undefined>(un
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const [themeOptions, setThemeOptions] = React.useState<ThemeOptions>({
-    accentColor: "pink",
+    accentColor: "orange",
     compactMode: false,
     collapsedSidebar: false,
   })
@@ -44,8 +44,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     // Apply accent color as CSS variable
     document.documentElement.style.setProperty(
       "--accent-color",
-      themeOptions.accentColor === "pink"
-        ? "rgb(236, 72, 153)"
+      themeOptions.accentColor === "orange"
+        ? "rgb(249, 115, 22)"
         : themeOptions.accentColor === "blue"
           ? "rgb(59, 130, 246)"
           : themeOptions.accentColor === "green"

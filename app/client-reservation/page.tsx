@@ -15,8 +15,17 @@ import { sendConfirmationEmail, generateConfirmationCode } from "@/lib/email-ser
 import { toast } from "@/components/ui/use-toast"
 import { useTranslation } from "@/lib/i18n/translation-context"
 import { LanguageSelector } from "@/components/language-selector"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import {
+  format,
+  addDays,
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay as isSameDayFn,
+} from "date-fns"
 import { pl, enUS } from "date-fns/locale"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
@@ -43,9 +52,11 @@ export default function ClientReservation() {
   const [confirmationCode, setConfirmationCode] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Dodajemy stany do kontrolowania kalendarzy
+  // Stany dla kalendarza
   const [startDateCalendarOpen, setStartDateCalendarOpen] = useState(false)
   const [endDateCalendarOpen, setEndDateCalendarOpen] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [endCurrentMonth, setEndCurrentMonth] = useState(new Date())
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
@@ -76,9 +87,7 @@ export default function ClientReservation() {
     })
   }
 
-  const handleDateChange = (date: Date | undefined, field: "startDate" | "endDate") => {
-    if (!date) return
-
+  const handleDateChange = (date: Date, field: "startDate" | "endDate") => {
     const formattedDate = format(date, "yyyy-MM-dd")
 
     setFormData((prev) => {
@@ -278,6 +287,121 @@ export default function ClientReservation() {
     }
   }, [startDateCalendarOpen, endDateCalendarOpen])
 
+  // Funkcje pomocnicze dla kalendarza
+  const nextMonth = (isEndDate = false) => {
+    if (isEndDate) {
+      setEndCurrentMonth(addMonths(endCurrentMonth, 1))
+    } else {
+      setCurrentMonth(addMonths(currentMonth, 1))
+    }
+  }
+
+  const prevMonth = (isEndDate = false) => {
+    if (isEndDate) {
+      setEndCurrentMonth(subMonths(endCurrentMonth, 1))
+    } else {
+      setCurrentMonth(subMonths(currentMonth, 1))
+    }
+  }
+
+  const renderCalendar = (isEndDate = false) => {
+    const monthToRender = isEndDate ? endCurrentMonth : currentMonth
+    const monthStart = startOfMonth(monthToRender)
+    const monthEnd = endOfMonth(monthToRender)
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
+
+    // Dodajemy dni z poprzedniego i następnego miesiąca, aby wypełnić siatkę
+    const dayOfWeek = monthStart.getDay()
+    const daysFromPrevMonth = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Dostosowanie do poniedziałku jako pierwszy dzień tygodnia
+
+    const prevMonthDays = []
+    for (let i = daysFromPrevMonth; i > 0; i--) {
+      prevMonthDays.push(addDays(monthStart, -i))
+    }
+
+    const nextMonthDays = []
+    const totalDaysInGrid = 42 // 6 tygodni po 7 dni
+    const remainingDays = totalDaysInGrid - (prevMonthDays.length + days.length)
+    for (let i = 1; i <= remainingDays; i++) {
+      nextMonthDays.push(addDays(monthEnd, i))
+    }
+
+    const allDays = [...prevMonthDays, ...days, ...nextMonthDays]
+
+    const weekDays =
+      getLocale() === pl ? ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"] : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+
+    const selectedDate = isEndDate
+      ? formData.endDate
+        ? new Date(formData.endDate)
+        : null
+      : formData.startDate
+        ? new Date(formData.startDate)
+        : null
+
+    const isDateDisabled = (date: Date) => {
+      if (isEndDate && formData.startDate) {
+        return date < new Date(formData.startDate)
+      }
+      return false
+    }
+
+    return (
+      <div className="p-3 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 w-[300px]">
+        <div className="flex justify-between items-center mb-4">
+          <button
+            type="button"
+            onClick={() => prevMonth(isEndDate)}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="font-medium">{format(monthToRender, "MMMM yyyy", { locale: getLocale() })}</div>
+          <button
+            type="button"
+            onClick={() => nextMonth(isEndDate)}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+          >
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {weekDays.map((day, i) => (
+            <div key={i} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1">
+          {allDays.map((day, i) => {
+            const isCurrentMonth = isSameMonth(day, monthToRender)
+            const isSelected = selectedDate ? isSameDayFn(day, selectedDate) : false
+            const isDisabled = isDateDisabled(day)
+
+            return (
+              <button
+                key={i}
+                type="button"
+                disabled={isDisabled}
+                onClick={() => handleDateChange(day, isEndDate ? "endDate" : "startDate")}
+                className={`
+                  h-8 w-8 flex items-center justify-center rounded-full text-sm
+                  ${!isCurrentMonth ? "text-gray-400 dark:text-gray-600" : ""}
+                  ${isSelected ? "bg-orange-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"}
+                  ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                `}
+              >
+                {format(day, "d")}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Navigation - Same as on the home page */}
@@ -472,76 +596,47 @@ export default function ClientReservation() {
                         <div className="space-y-2">
                           <Label htmlFor="startDate">{t("common.startDate")}</Label>
                           <div className="relative" ref={startDateRef}>
-                            <div className="grid gap-2">
-                              <Button
-                                id="startDateButton"
-                                type="button"
-                                variant="outline"
-                                className="w-full justify-start text-left font-normal h-10"
-                                onClick={() => {
-                                  setStartDateCalendarOpen(!startDateCalendarOpen)
-                                  if (endDateCalendarOpen) setEndDateCalendarOpen(false)
-                                }}
-                              >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {formData.startDate ? (
-                                  formatDate(formData.startDate)
-                                ) : (
-                                  <span className="text-muted-foreground">{t("common.selectDate")}</span>
-                                )}
-                              </Button>
-                            </div>
-                            {startDateCalendarOpen && (
-                              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700">
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={formData.startDate ? new Date(formData.startDate) : undefined}
-                                  onSelect={(date) => handleDateChange(date, "startDate")}
-                                  initialFocus
-                                  locale={getLocale()}
-                                />
-                              </div>
-                            )}
+                            <Button
+                              id="startDateButton"
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal h-10"
+                              onClick={() => {
+                                setStartDateCalendarOpen(!startDateCalendarOpen)
+                                if (endDateCalendarOpen) setEndDateCalendarOpen(false)
+                              }}
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              {formData.startDate ? (
+                                formatDate(formData.startDate)
+                              ) : (
+                                <span className="text-muted-foreground">{t("common.selectDate")}</span>
+                              )}
+                            </Button>
+                            {startDateCalendarOpen && <div className="absolute z-50 mt-1">{renderCalendar(false)}</div>}
                           </div>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="endDate">{t("common.endDate")}</Label>
                           <div className="relative" ref={endDateRef}>
-                            <div className="grid gap-2">
-                              <Button
-                                id="endDateButton"
-                                type="button"
-                                variant="outline"
-                                className="w-full justify-start text-left font-normal h-10"
-                                onClick={() => {
-                                  setEndDateCalendarOpen(!endDateCalendarOpen)
-                                  if (startDateCalendarOpen) setStartDateCalendarOpen(false)
-                                }}
-                              >
-                                <Calendar className="mr-2 h-4 w-4" />
-                                {formData.endDate ? (
-                                  formatDate(formData.endDate)
-                                ) : (
-                                  <span className="text-muted-foreground">{t("common.selectDate")}</span>
-                                )}
-                              </Button>
-                            </div>
-                            {endDateCalendarOpen && (
-                              <div className="absolute z-50 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700">
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={formData.endDate ? new Date(formData.endDate) : undefined}
-                                  onSelect={(date) => handleDateChange(date, "endDate")}
-                                  initialFocus
-                                  locale={getLocale()}
-                                  disabled={(date) => {
-                                    // Disable dates before start date
-                                    if (!formData.startDate) return false
-                                    return date < new Date(formData.startDate)
-                                  }}
-                                />
-                              </div>
-                            )}
+                            <Button
+                              id="endDateButton"
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal h-10"
+                              onClick={() => {
+                                setEndDateCalendarOpen(!endDateCalendarOpen)
+                                if (startDateCalendarOpen) setStartDateCalendarOpen(false)
+                              }}
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              {formData.endDate ? (
+                                formatDate(formData.endDate)
+                              ) : (
+                                <span className="text-muted-foreground">{t("common.selectDate")}</span>
+                              )}
+                            </Button>
+                            {endDateCalendarOpen && <div className="absolute z-50 mt-1">{renderCalendar(true)}</div>}
                           </div>
                         </div>
                       </div>
