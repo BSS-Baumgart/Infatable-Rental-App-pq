@@ -1,0 +1,76 @@
+export const notificationsTranslations = {
+  en: {
+    title: "Notifications",
+    markAllRead: "Mark all as read",
+    viewAll: "View all notifications",
+    noNotifications: "No notifications yet",
+    types: {
+      info: "Information",
+      success: "Success",
+      warning: "Warning",
+      error: "Error",
+    },
+    timeAgo: {
+      justNow: "just now",
+      minutesAgo: "{{count}} minute ago",
+      minutesAgo_plural: "{{count}} minutes ago",
+      hoursAgo: "{{count}} hour ago",
+      hoursAgo_plural: "{{count}} hours ago",
+      daysAgo: "{{count}} day ago",
+      daysAgo_plural: "{{count}} days ago",
+    },
+    actions: {
+      dismiss: "Dismiss",
+      view: "View",
+    },
+    categories: {
+      reservation: "Reservation",
+      payment: "Payment",
+      maintenance: "Maintenance",
+      system: "System",
+    },
+    messages: {
+      newReservation: "New reservation for {{attraction}}",
+      paymentReceived: "Payment of {{amount}} received for reservation #{{id}}",
+      maintenanceDue: "{{attraction}} is due for maintenance check",
+      systemUpdate: "System update available",
+    },
+  },
+  pl: {
+    title: "Powiadomienia",
+    markAllRead: "Oznacz wszystkie jako przeczytane",
+    viewAll: "Zobacz wszystkie powiadomienia",
+    noNotifications: "Brak powiadomień",
+    types: {
+      info: "Informacja",
+      success: "Sukces",
+      warning: "Ostrzeżenie",
+      error: "Błąd",
+    },
+    timeAgo: {
+      justNow: "przed chwilą",
+      minutesAgo: "{{count}} minutę temu",
+      minutesAgo_plural: "{{count}} minut temu",
+      hoursAgo: "{{count}} godzinę temu",
+      hoursAgo_plural: "{{count}} godzin temu",
+      daysAgo: "{{count}} dzień temu",
+      daysAgo_plural: "{{count}} dni temu",
+    },
+    actions: {
+      dismiss: "Odrzuć",
+      view: "Zobacz",
+    },
+    categories: {
+      reservation: "Rezerwacja",
+      payment: "Płatność",
+      maintenance: "Konserwacja",
+      system: "System",
+    },
+    messages: {
+      newReservation: "Nowa rezerwacja dla {{attraction}}",
+      paymentReceived: "Otrzymano płatność {{amount}} za rezerwację #{{id}}",
+      maintenanceDue: "{{attraction}} wymaga przeglądu konserwacyjnego",
+      systemUpdate: "Dostępna aktualizacja systemu",
+    },
+  },
+}

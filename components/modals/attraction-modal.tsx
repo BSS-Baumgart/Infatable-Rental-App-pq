@@ -7,61 +7,72 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import type { Attraction } from "@/lib/types"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 interface AttractionModalProps {
   isOpen: boolean
   onClose: () => void
   attraction?: Attraction | null
-  onSave: (attraction: Partial<Attraction>) => void
+  onSave: (data: Partial<Attraction>) => void
 }
 
 export default function AttractionModal({ isOpen, onClose, attraction, onSave }: AttractionModalProps) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState<Partial<Attraction>>({
     name: "",
-    width: 0,
-    height: 0,
-    length: 0,
-    weight: 0,
+    description: "",
     price: 0,
+    width: 0,
+    length: 0,
+    height: 0,
+    weight: 0,
     setupTime: 0,
     image: "",
   })
 
-  // Initialize form with attraction data if editing
   useEffect(() => {
     if (attraction) {
       setFormData({
-        id: attraction.id,
         name: attraction.name,
-        width: attraction.width,
-        height: attraction.height,
-        length: attraction.length,
-        weight: attraction.weight,
+        description: attraction.description,
         price: attraction.price,
+        width: attraction.width,
+        length: attraction.length,
+        height: attraction.height,
+        weight: attraction.weight,
         setupTime: attraction.setupTime,
-        image: attraction.image || "",
+        image: attraction.image,
       })
     } else {
-      // Reset form for new attraction
       setFormData({
         name: "",
-        width: 0,
-        height: 0,
-        length: 0,
-        weight: 0,
+        description: "",
         price: 0,
+        width: 0,
+        length: 0,
+        height: 0,
+        weight: 0,
         setupTime: 0,
         image: "",
       })
     }
   }, [attraction, isOpen])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "number" ? Number.parseFloat(value) || 0 : value,
+      [name]:
+        name === "price" ||
+        name === "width" ||
+        name === "length" ||
+        name === "height" ||
+        name === "weight" ||
+        name === "setupTime"
+          ? Number.parseFloat(value)
+          : value,
     }))
   }
 
@@ -71,126 +82,125 @@ export default function AttractionModal({ isOpen, onClose, attraction, onSave }:
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{attraction ? "Edit Attraction" : "New Attraction"}</DialogTitle>
+          <DialogTitle>{attraction ? t("attractions.edit") : t("attractions.new")}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          {/* Name */}
-          <div className="grid w-full items-center gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Bouncy Castle - Princess"
-              required
-            />
-          </div>
-
-          {/* Dimensions */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="grid w-full items-center gap-2">
-              <Label htmlFor="width">Width (cm)</Label>
-              <Input
-                type="number"
-                id="width"
-                name="width"
-                value={formData.width}
-                onChange={handleInputChange}
-                min="0"
-                required
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="name">{t("attractions.name")}</Label>
+              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="description">{t("attractions.description")}</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
               />
             </div>
-            <div className="grid w-full items-center gap-2">
-              <Label htmlFor="length">Length (cm)</Label>
-              <Input
-                type="number"
-                id="length"
-                name="length"
-                value={formData.length}
-                onChange={handleInputChange}
-                min="0"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="price">{t("attractions.price")} ($)</Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="setupTime">
+                  {t("attractions.setupTime")} ({t("calendar.minutes")})
+                </Label>
+                <Input
+                  id="setupTime"
+                  name="setupTime"
+                  type="number"
+                  min="0"
+                  value={formData.setupTime}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
-            <div className="grid w-full items-center gap-2">
-              <Label htmlFor="height">Height (cm)</Label>
-              <Input
-                type="number"
-                id="height"
-                name="height"
-                value={formData.height}
-                onChange={handleInputChange}
-                min="0"
-                required
-              />
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="width">{t("attractions.width")} (cm)</Label>
+                <Input
+                  id="width"
+                  name="width"
+                  type="number"
+                  min="0"
+                  value={formData.width}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="length">{t("attractions.length")} (cm)</Label>
+                <Input
+                  id="length"
+                  name="length"
+                  type="number"
+                  min="0"
+                  value={formData.length}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="height">{t("attractions.height")} (cm)</Label>
+                <Input
+                  id="height"
+                  name="height"
+                  type="number"
+                  min="0"
+                  value={formData.height}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="weight">{t("attractions.weight")} (kg)</Label>
+                <Input
+                  id="weight"
+                  name="weight"
+                  type="number"
+                  min="0"
+                  value={formData.weight}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="image">{t("attractions.imageUrl")}</Label>
+                <Input
+                  id="image"
+                  name="image"
+                  type="text"
+                  value={formData.image || ""}
+                  onChange={handleChange}
+                  placeholder="/bouncy-castle.png"
+                />
+              </div>
             </div>
           </div>
-
-          {/* Weight and Setup Time */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid w-full items-center gap-2">
-              <Label htmlFor="weight">Weight (kg)</Label>
-              <Input
-                type="number"
-                id="weight"
-                name="weight"
-                value={formData.weight}
-                onChange={handleInputChange}
-                min="0"
-                required
-              />
-            </div>
-            <div className="grid w-full items-center gap-2">
-              <Label htmlFor="setupTime">Setup Time (min)</Label>
-              <Input
-                type="number"
-                id="setupTime"
-                name="setupTime"
-                value={formData.setupTime}
-                onChange={handleInputChange}
-                min="0"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Price */}
-          <div className="grid w-full items-center gap-2">
-            <Label htmlFor="price">Price ($)</Label>
-            <Input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleInputChange}
-              min="0"
-              required
-            />
-          </div>
-
-          {/* Image URL */}
-          <div className="grid w-full items-center gap-2">
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              type="text"
-              id="image"
-              name="image"
-              value={formData.image || ""}
-              onChange={handleInputChange}
-              placeholder="/path/to/image.jpg"
-            />
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("common.save")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 // Define component permissions structure
 interface ComponentPermission {
@@ -34,6 +35,7 @@ interface RolePermission {
 }
 
 export default function PermissionsManagement() {
+  const { t } = useTranslation()
   // Initial component permissions
   const [componentPermissions, setComponentPermissions] = useState<ComponentPermission[]>([
     {
@@ -220,8 +222,8 @@ export default function PermissionsManagement() {
 
   const handleSavePermissions = () => {
     toast({
-      title: "Permissions saved",
-      description: "Component visibility permissions have been updated successfully.",
+      title: t("settings.permissionsSaved"),
+      description: t("settings.permissionsSavedDescription"),
     })
   }
 
@@ -229,25 +231,25 @@ export default function PermissionsManagement() {
     <div className="space-y-6">
       <Tabs defaultValue="components" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="components">Component Visibility</TabsTrigger>
-          <TabsTrigger value="actions">Action Permissions</TabsTrigger>
+          <TabsTrigger value="components">{t("settings.componentVisibility")}</TabsTrigger>
+          <TabsTrigger value="actions">{t("settings.actionPermissions")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="components">
           <Card>
             <CardHeader>
-              <CardTitle>Component Visibility Permissions</CardTitle>
+              <CardTitle>{t("settings.permissions")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="flex justify-end mb-4">
                   <Select value={selectedRole} onValueChange={setSelectedRole}>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder={t("settings.roles")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                      <SelectItem value="employee">Employee</SelectItem>
+                      <SelectItem value="admin">{t("settings.admin")}</SelectItem>
+                      <SelectItem value="employee">{t("settings.staff")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -256,18 +258,36 @@ export default function PermissionsManagement() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-800">
-                        <th className="text-left font-medium p-2">Component</th>
-                        <th className="text-left font-medium p-2">Description</th>
-                        <th className="text-center font-medium p-2">Enabled</th>
+                        <th className="text-left font-medium p-2">{t("settings.component")}</th>
+                        <th className="text-left font-medium p-2">{t("settings.description")}</th>
+                        <th className="text-center font-medium p-2">{t("settings.enabled")}</th>
                         <th className="text-center font-medium p-2">
-                          {selectedRole === "admin" ? "Admin Access" : "Employee Access"}
+                          {selectedRole === "admin" ? t("settings.adminAccess") : t("settings.employeeAccess")}
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {componentPermissions.map((permission) => (
                         <tr key={permission.id} className="border-b border-gray-100 dark:border-gray-800">
-                          <td className="p-2 font-medium">{permission.name}</td>
+                          <td className="p-2 font-medium">
+                            {permission.name === "Dashboard"
+                              ? t("nav.dashboard")
+                              : permission.name === "Calendar"
+                                ? t("nav.calendar")
+                                : permission.name === "Reservations"
+                                  ? t("nav.reservations")
+                                  : permission.name === "Attractions"
+                                    ? t("nav.attractions")
+                                    : permission.name === "Clients"
+                                      ? t("nav.clients")
+                                      : permission.name === "Invoices"
+                                        ? t("nav.invoices")
+                                        : permission.name === "Documents"
+                                          ? t("nav.documents")
+                                          : permission.name === "Settings"
+                                            ? t("nav.settings")
+                                            : permission.name}
+                          </td>
                           <td className="p-2">{permission.description}</td>
                           <td className="p-2 text-center">
                             <div className="flex justify-center">
@@ -297,7 +317,7 @@ export default function PermissionsManagement() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleSavePermissions}>Save Permissions</Button>
+                  <Button onClick={handleSavePermissions}>{t("settings.savePermissions")}</Button>
                 </div>
               </div>
             </CardContent>
@@ -307,18 +327,18 @@ export default function PermissionsManagement() {
         <TabsContent value="actions">
           <Card>
             <CardHeader>
-              <CardTitle>Action Permissions by Role</CardTitle>
+              <CardTitle>{t("settings.actionPermissionsByRole")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="flex justify-end mb-4">
                   <Select value={selectedRole} onValueChange={setSelectedRole}>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder={t("settings.roles")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                      <SelectItem value="employee">Employee</SelectItem>
+                      <SelectItem value="admin">{t("settings.admin")}</SelectItem>
+                      <SelectItem value="employee">{t("settings.staff")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -327,11 +347,11 @@ export default function PermissionsManagement() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-800">
-                        <th className="text-left font-medium p-2">Module</th>
-                        <th className="text-center font-medium p-2">Create</th>
-                        <th className="text-center font-medium p-2">Read</th>
-                        <th className="text-center font-medium p-2">Update</th>
-                        <th className="text-center font-medium p-2">Delete</th>
+                        <th className="text-left font-medium p-2">{t("settings.module")}</th>
+                        <th className="text-center font-medium p-2">{t("common.create")}</th>
+                        <th className="text-center font-medium p-2">{t("common.read")}</th>
+                        <th className="text-center font-medium p-2">{t("common.edit")}</th>
+                        <th className="text-center font-medium p-2">{t("common.delete")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -339,7 +359,19 @@ export default function PermissionsManagement() {
                         <tr key={permission.id} className="border-b border-gray-100 dark:border-gray-800">
                           <td className="p-2">
                             <div>
-                              <div className="font-medium">{permission.name}</div>
+                              <div className="font-medium">
+                                {permission.name === "Reservations"
+                                  ? t("nav.reservations")
+                                  : permission.name === "Clients"
+                                    ? t("nav.clients")
+                                    : permission.name === "Attractions"
+                                      ? t("nav.attractions")
+                                      : permission.name === "Invoices"
+                                        ? t("nav.invoices")
+                                        : permission.name === "Documents"
+                                          ? t("nav.documents")
+                                          : permission.name}
+                              </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</div>
                             </div>
                           </td>
@@ -394,7 +426,7 @@ export default function PermissionsManagement() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleSavePermissions}>Save Permissions</Button>
+                  <Button onClick={handleSavePermissions}>{t("settings.savePermissions")}</Button>
                 </div>
               </div>
             </CardContent>

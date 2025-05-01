@@ -12,6 +12,7 @@ import { FileUp, X, File, FileText, ImageIcon } from "lucide-react"
 import type { Document } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 interface DocumentModalProps {
   isOpen: boolean
@@ -37,6 +38,7 @@ export default function DocumentModal({
   relatedId,
   onSave,
 }: DocumentModalProps) {
+  const { t } = useTranslation()
   const [name, setName] = useState(document?.name || "")
   const [description, setDescription] = useState(document?.description || "")
   const [file, setFile] = useState<File | null>(null)
@@ -124,49 +126,49 @@ export default function DocumentModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{document ? "Edit Document" : "Add New Document"}</DialogTitle>
+          <DialogTitle>{document ? t("documents.edit") : t("documents.add")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Document Title</Label>
+            <Label htmlFor="name">{t("documents.title.label")}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter document title"
+              placeholder={t("documents.title.placeholder")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("documents.description")}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter document description"
+              placeholder={t("documents.description.placeholder")}
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="documentType">Document Type</Label>
+            <Label htmlFor="documentType">{t("documents.type.label")}</Label>
             <Select value={documentType} onValueChange={setDocumentType} disabled={!!file}>
               <SelectTrigger>
-                <SelectValue placeholder="Select document type" />
+                <SelectValue placeholder={t("documents.type.select")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="application/pdf">PDF Document</SelectItem>
-                <SelectItem value="image/jpeg">JPEG Image</SelectItem>
-                <SelectItem value="image/png">PNG Image</SelectItem>
-                <SelectItem value="application/msword">Word Document</SelectItem>
-                <SelectItem value="application/vnd.ms-excel">Excel Spreadsheet</SelectItem>
+                <SelectItem value="application/pdf">{t("documents.type.pdf")}</SelectItem>
+                <SelectItem value="image/jpeg">{t("documents.type.jpeg")}</SelectItem>
+                <SelectItem value="image/png">{t("documents.type.png")}</SelectItem>
+                <SelectItem value="application/msword">{t("documents.type.word")}</SelectItem>
+                <SelectItem value="application/vnd.ms-excel">{t("documents.type.excel")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="file">Upload File</Label>
+            <Label htmlFor="file">{t("documents.file.upload")}</Label>
             {file ? (
               <div className="border rounded-lg p-4">
                 <div className="flex items-center justify-between">
@@ -187,8 +189,8 @@ export default function DocumentModal({
                 <input type="file" id="file" className="hidden" onChange={handleFileChange} ref={fileInputRef} />
                 <label htmlFor="file" className="flex flex-col items-center justify-center cursor-pointer space-y-2">
                   <FileUp className="h-8 w-8 text-gray-400" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Click to upload or drag and drop</span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">PDF, DOC, XLS, JPG, PNG (max. 10MB)</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{t("documents.file.click")}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{t("documents.file.formats")}</span>
                 </label>
               </div>
             )}
@@ -197,7 +199,7 @@ export default function DocumentModal({
           {isUploading && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Uploading...</span>
+                <span>{t("documents.uploading")}</span>
                 <span>{uploadProgress}%</span>
               </div>
               <Progress value={uploadProgress} className="h-2" />
@@ -206,10 +208,10 @@ export default function DocumentModal({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t("documents.cancel")}
             </Button>
             <Button type="submit" disabled={isUploading || !name}>
-              {isUploading ? "Uploading..." : document ? "Update Document" : "Upload Document"}
+              {isUploading ? t("documents.uploading") : document ? t("documents.update") : t("documents.upload.button")}
             </Button>
           </DialogFooter>
         </form>

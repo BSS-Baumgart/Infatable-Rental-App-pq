@@ -9,8 +9,10 @@ import { Edit, Plus, Search, Trash, User } from "lucide-react"
 import ClientModal from "@/components/modals/client-modal"
 import { useToast } from "@/components/ui/use-toast"
 import type { Client } from "@/lib/types"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 export default function ClientsPage() {
+  const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState("")
   const [clients, setClients] = useState<Client[]>(initialClients)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -41,8 +43,8 @@ export default function ClientsPage() {
       // Update existing client
       setClients((prev) => prev.map((c) => (c.id === currentClient.id ? ({ ...c, ...data } as Client) : c)))
       toast({
-        title: "Client updated",
-        description: `${data.firstName} ${data.lastName} has been updated successfully.`,
+        title: t("clients.updated"),
+        description: t("clients.updateSuccess", { firstName: data.firstName, lastName: data.lastName }),
       })
     } else {
       // Create new client
@@ -54,19 +56,19 @@ export default function ClientsPage() {
 
       setClients((prev) => [...prev, newClient])
       toast({
-        title: "Client created",
-        description: `${data.firstName} ${data.lastName} has been created successfully.`,
+        title: t("clients.created"),
+        description: t("clients.createSuccess", { firstName: data.firstName, lastName: data.lastName }),
       })
     }
     handleCloseModal()
   }
 
   const handleDeleteClient = (id: string) => {
-    if (confirm("Are you sure you want to delete this client?")) {
+    if (confirm(t("clients.confirmDelete"))) {
       setClients((prev) => prev.filter((c) => c.id !== id))
       toast({
-        title: "Client deleted",
-        description: `Client has been deleted.`,
+        title: t("clients.deleted"),
+        description: t("clients.deleteSuccess"),
       })
     }
   }
@@ -75,13 +77,13 @@ export default function ClientsPage() {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-2xl font-bold">Clients</h1>
+          <h1 className="text-2xl font-bold">{t("clients.title")}</h1>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
               <input
                 type="text"
-                placeholder="Search clients..."
+                placeholder={t("clients.search")}
                 className="pl-8 h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-[#0F0F12] dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -89,25 +91,25 @@ export default function ClientsPage() {
             </div>
             <Button onClick={() => handleOpenModal()}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Client
+              {t("clients.addClient")}
             </Button>
           </div>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>All Clients</CardTitle>
+            <CardTitle>{t("clients.allClients")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-800">
-                    <th className="text-left font-medium p-2">Name</th>
-                    <th className="text-left font-medium p-2">Contact</th>
-                    <th className="text-left font-medium p-2">Address</th>
-                    <th className="text-left font-medium p-2">Created</th>
-                    <th className="text-right font-medium p-2">Actions</th>
+                    <th className="text-left font-medium p-2">{t("clients.name")}</th>
+                    <th className="text-left font-medium p-2">{t("clients.contact")}</th>
+                    <th className="text-left font-medium p-2">{t("clients.address")}</th>
+                    <th className="text-left font-medium p-2">{t("clients.created")}</th>
+                    <th className="text-right font-medium p-2">{t("common.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -127,7 +129,7 @@ export default function ClientsPage() {
                       </td>
                       <td className="p-2">
                         <div>{client.phone}</div>
-                        <div className="text-gray-500 dark:text-gray-400">{client.email || "No email"}</div>
+                        <div className="text-gray-500 dark:text-gray-400">{client.email || t("clients.noEmail")}</div>
                       </td>
                       <td className="p-2">
                         <div>

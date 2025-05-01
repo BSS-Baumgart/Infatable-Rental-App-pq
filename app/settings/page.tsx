@@ -17,8 +17,11 @@ import UserManagement from "@/components/settings/user-management"
 import PermissionsManagement from "@/components/settings/permissions-management"
 import NotificationSettings from "@/components/settings/notification-settings"
 import { useThemeContext } from "@/components/theme-provider"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 export default function SettingsPage() {
+  const { t, language, setLanguage } = useTranslation()
+  const [activeTab, setActiveTab] = useState("general")
   const [currentUser] = useState(users[0]) // Using the first user as the current user
   const isAdmin = currentUser.role === "admin"
   const { toast } = useToast()
@@ -27,14 +30,14 @@ export default function SettingsPage() {
 
   const handleSaveAppearance = () => {
     toast({
-      title: "Appearance settings saved",
+      title: t("settings.saved"),
       description: "Your appearance settings have been updated successfully.",
     })
   }
 
   const handleSaveGeneral = () => {
     toast({
-      title: "General settings saved",
+      title: t("settings.saved"),
       description: "Your general settings have been updated successfully.",
     })
   }
@@ -85,7 +88,7 @@ export default function SettingsPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Settings</h1>
+        <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
 
         <div className="relative flex items-center">
           <button
@@ -101,25 +104,25 @@ export default function SettingsPage() {
               <TabsList className="grid w-full auto-cols-max grid-flow-col">
                 <TabsTrigger value="general" className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
-                  <span>General</span>
+                  <span>{t("settings.general")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="appearance" className="flex items-center gap-2">
                   <Palette className="h-4 w-4" />
-                  <span>Appearance</span>
+                  <span>{t("settings.appearance")}</span>
                 </TabsTrigger>
                 {isAdmin && (
                   <>
                     <TabsTrigger value="users" className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      <span>Users</span>
+                      <span>{t("settings.users")}</span>
                     </TabsTrigger>
                     <TabsTrigger value="permissions" className="flex items-center gap-2">
                       <ShieldCheck className="h-4 w-4" />
-                      <span>Permissions</span>
+                      <span>{t("settings.permissions")}</span>
                     </TabsTrigger>
                     <TabsTrigger value="notifications" className="flex items-center gap-2">
                       <Bell className="h-4 w-4" />
-                      <span>Notifications</span>
+                      <span>{t("settings.notifications")}</span>
                     </TabsTrigger>
                   </>
                 )}
@@ -128,51 +131,54 @@ export default function SettingsPage() {
               <TabsContent value="general">
                 <Card>
                   <CardHeader>
-                    <CardTitle>General Settings</CardTitle>
+                    <CardTitle>{t("settings.generalSettings")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <h3 className="text-lg font-medium">Company Information</h3>
+                        <h3 className="text-lg font-medium">{t("settings.companyInformation")}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="companyName">Company Name</Label>
+                            <Label htmlFor="companyName">{t("settings.companyName")}</Label>
                             <Input id="companyName" defaultValue="BouncyRent" />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="companyEmail">Company Email</Label>
+                            <Label htmlFor="companyEmail">{t("settings.companyEmail")}</Label>
                             <Input id="companyEmail" type="email" defaultValue="info@bouncyrent.com" />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="companyPhone">Company Phone</Label>
+                            <Label htmlFor="companyPhone">{t("settings.companyPhone")}</Label>
                             <Input id="companyPhone" defaultValue="+48 123 456 789" />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="companyAddress">Company Address</Label>
+                            <Label htmlFor="companyAddress">{t("settings.companyAddress")}</Label>
                             <Input id="companyAddress" defaultValue="123 Main St, Warsaw, Poland" />
                           </div>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="text-lg font-medium">Regional Settings</h3>
+                        <h3 className="text-lg font-medium">{t("settings.regionalSettings")}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="language">Language</Label>
-                            <Select defaultValue="en">
+                            <Label htmlFor="language">{t("settings.language")}</Label>
+                            <Select
+                              value={language}
+                              onValueChange={(value) => setLanguage(value as "en" | "pl" | "de" | "fr")}
+                            >
                               <SelectTrigger id="language">
                                 <SelectValue placeholder="Select language" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="en">English</SelectItem>
-                                <SelectItem value="pl">Polish</SelectItem>
-                                <SelectItem value="de">German</SelectItem>
-                                <SelectItem value="fr">French</SelectItem>
+                                <SelectItem value="en">{t("language.en")}</SelectItem>
+                                <SelectItem value="pl">{t("language.pl")}</SelectItem>
+                                <SelectItem value="de">{t("language.de")}</SelectItem>
+                                <SelectItem value="fr">{t("language.fr")}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="timezone">Timezone</Label>
+                            <Label htmlFor="timezone">{t("settings.timezone")}</Label>
                             <Select defaultValue="europe-warsaw">
                               <SelectTrigger id="timezone">
                                 <SelectValue placeholder="Select timezone" />
@@ -186,7 +192,7 @@ export default function SettingsPage() {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="dateFormat">Date Format</Label>
+                            <Label htmlFor="dateFormat">{t("settings.dateFormat")}</Label>
                             <Select defaultValue="dd-mm-yyyy">
                               <SelectTrigger id="dateFormat">
                                 <SelectValue placeholder="Select date format" />
@@ -199,7 +205,7 @@ export default function SettingsPage() {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="currency">Currency</Label>
+                            <Label htmlFor="currency">{t("settings.currency")}</Label>
                             <Select defaultValue="pln">
                               <SelectTrigger id="currency">
                                 <SelectValue placeholder="Select currency" />
@@ -216,7 +222,7 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="flex justify-end">
-                        <Button onClick={handleSaveGeneral}>Save Settings</Button>
+                        <Button onClick={handleSaveGeneral}>{t("settings.saveSettings")}</Button>
                       </div>
                     </div>
                   </CardContent>
@@ -226,21 +232,19 @@ export default function SettingsPage() {
               <TabsContent value="appearance">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Appearance Settings</CardTitle>
+                    <CardTitle>{t("settings.appearanceSettings")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <h3 className="text-lg font-medium">Theme</h3>
+                        <h3 className="text-lg font-medium">{t("settings.theme")}</h3>
                         <div className="grid grid-cols-1 gap-4">
                           <div className="flex items-center justify-between">
                             <div>
                               <Label htmlFor="darkMode" className="font-medium">
-                                Dark Mode
+                                {t("settings.darkMode")}
                               </Label>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Enable dark mode for the application
-                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{t("settings.enableDarkMode")}</p>
                             </div>
                             <Switch id="darkMode" checked={theme === "dark"} onCheckedChange={handleDarkModeChange} />
                           </div>
@@ -248,10 +252,10 @@ export default function SettingsPage() {
                           <div className="flex items-center justify-between">
                             <div>
                               <Label htmlFor="systemTheme" className="font-medium">
-                                Use System Theme
+                                {t("settings.useSystemTheme")}
                               </Label>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Follow your system's theme settings
+                                {t("settings.followSystemTheme")}
                               </p>
                             </div>
                             <Switch
@@ -264,7 +268,7 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="text-lg font-medium">Accent Color</h3>
+                        <h3 className="text-lg font-medium">{t("settings.accentColor")}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div className="flex flex-col items-center">
                             <div
@@ -298,15 +302,15 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="text-lg font-medium">Layout</h3>
+                        <h3 className="text-lg font-medium">{t("settings.layout")}</h3>
                         <div className="grid grid-cols-1 gap-4">
                           <div className="flex items-center justify-between">
                             <div>
                               <Label htmlFor="compactMode" className="font-medium">
-                                Compact Mode
+                                {t("settings.compactMode")}
                               </Label>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Use a more compact layout with less whitespace
+                                {t("settings.compactModeDescription")}
                               </p>
                             </div>
                             <Switch
@@ -319,10 +323,10 @@ export default function SettingsPage() {
                           <div className="flex items-center justify-between">
                             <div>
                               <Label htmlFor="sidebarCollapsed" className="font-medium">
-                                Collapsed Sidebar by Default
+                                {t("settings.collapsedSidebar")}
                               </Label>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Start with the sidebar collapsed
+                                {t("settings.collapsedSidebarDescription")}
                               </p>
                             </div>
                             <Switch
@@ -336,7 +340,7 @@ export default function SettingsPage() {
 
                       <div className="flex justify-end">
                         <Button onClick={handleSaveAppearance} style={{ backgroundColor: "var(--accent-color)" }}>
-                          Save Appearance
+                          {t("settings.saveAppearance")}
                         </Button>
                       </div>
                     </div>

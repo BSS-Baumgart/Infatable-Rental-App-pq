@@ -15,8 +15,10 @@ import { Edit, Plus, Search, Trash, UserIcon } from "lucide-react"
 import type { User, UserRole } from "@/lib/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 export default function UserManagement() {
+  const { t } = useTranslation()
   const [users, setUsers] = useState<User[]>(initialUsers)
   const [searchTerm, setSearchTerm] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -111,7 +113,7 @@ export default function UserManagement() {
   }
 
   const handleDeleteUser = (id: string) => {
-    if (confirm("Are you sure you want to delete this user?")) {
+    if (confirm(t("settings.confirmDelete"))) {
       setUsers((prev) => prev.filter((u) => u.id !== id))
       toast({
         title: "User deleted",
@@ -161,10 +163,10 @@ export default function UserManagement() {
         <TabsContent value="users">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>User Management</CardTitle>
+              <CardTitle>{t("settings.users")}</CardTitle>
               <Button onClick={() => handleOpenModal()}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add User
+                {t("settings.addUser")}
               </Button>
             </CardHeader>
             <CardContent>
@@ -185,10 +187,10 @@ export default function UserManagement() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-800">
-                      <th className="text-left font-medium p-2">Name</th>
+                      <th className="text-left font-medium p-2">{t("common.name")}</th>
                       <th className="text-left font-medium p-2">Email</th>
-                      <th className="text-left font-medium p-2">Role</th>
-                      <th className="text-right font-medium p-2">Actions</th>
+                      <th className="text-left font-medium p-2">{t("settings.roles")}</th>
+                      <th className="text-right font-medium p-2">{t("common.actions")}</th>
                     </tr>
                   </thead>
                   <tbody>

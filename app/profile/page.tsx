@@ -4,271 +4,283 @@ import type React from "react"
 
 import { useState } from "react"
 import AppLayout from "@/components/layout/app-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
-import { users } from "@/lib/mock-data"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, Lock, Bell } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n/translation-context"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function ProfilePage() {
-  const [currentUser] = useState(users[0]) // Using the first user as the current user
-  const [profileData, setProfileData] = useState({
-    name: currentUser.name,
-    email: currentUser.email,
-    avatar: currentUser.avatar || "",
-  })
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  })
+  const { t } = useTranslation()
   const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setProfileData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleSaveProfile = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setIsLoading(true)
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setPasswordData((prev) => ({ ...prev, [name]: value }))
-  }
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, this would update the user profile in the database
+    setIsLoading(false)
     toast({
-      title: "Profile updated",
-      description: "Your profile information has been updated successfully.",
+      title: t("profile.profileUpdated"),
+      description: new Date().toLocaleTimeString(),
     })
   }
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleChangePassword = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setIsLoading(true)
 
-    // Validate passwords
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "New password and confirmation password must match.",
-        variant: "destructive",
-      })
-      return
-    }
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // In a real app, this would update the user's password in the database
+    setIsLoading(false)
     toast({
-      title: "Password updated",
-      description: "Your password has been updated successfully.",
+      title: t("profile.passwordChanged"),
+      description: new Date().toLocaleTimeString(),
     })
+  }
 
-    // Reset password fields
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+  const handleSaveSettings = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setIsLoading(true)
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    setIsLoading(false)
+    toast({
+      title: t("profile.settingsSaved"),
+      description: new Date().toLocaleTimeString(),
     })
   }
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">My Profile</h1>
+        <h1 className="text-2xl font-bold">{t("profile.title")}</h1>
 
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="general">
-              <User className="h-4 w-4 mr-2" />
-              General
-            </TabsTrigger>
-            <TabsTrigger value="security">
-              <Lock className="h-4 w-4 mr-2" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="h-4 w-4 mr-2" />
-              Notifications
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="general">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1">
             <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleProfileSubmit} className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-full bg-pink-100 dark:bg-pink-900 flex items-center justify-center text-pink-600 dark:text-pink-300 font-medium text-2xl">
-                      {profileData.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Profile Picture</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Upload a new profile picture</p>
-                      <div className="mt-2">
-                        <Input type="file" className="w-full" />
-                      </div>
-                    </div>
+              <CardContent className="pt-6 flex flex-col items-center">
+                <Avatar className="h-32 w-32 mb-4">
+                  <AvatarImage src="/abstract-geometric-shapes.png" alt="User" />
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+                <h2 className="text-xl font-semibold">John Doe</h2>
+                <p className="text-muted-foreground">john.doe@example.com</p>
+                <div className="mt-4 space-y-2 w-full">
+                  <Button variant="outline" className="w-full">
+                    {t("profile.uploadPhoto")}
+                  </Button>
+                  <Button variant="outline" className="w-full text-destructive">
+                    {t("profile.removePhoto")}
+                  </Button>
+                </div>
+                <div className="mt-6 w-full border-t pt-4">
+                  <div className="flex justify-between py-2">
+                    <span className="text-muted-foreground">{t("profile.lastLogin")}</span>
+                    <span>2023-04-15</span>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" name="name" value={profileData.name} onChange={handleProfileChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={profileData.email}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Role</Label>
-                      <Input id="role" value={currentUser.role === "admin" ? "Administrator" : "Employee"} disabled />
-                    </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-muted-foreground">{t("profile.memberSince")}</span>
+                    <span>2022-01-10</span>
                   </div>
-
-                  <div className="flex justify-end">
-                    <Button type="submit">Save Changes</Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      value={passwordData.currentPassword}
-                      onChange={handlePasswordChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={handlePasswordChange}
-                      required
-                    />
-                  </div>
-                  <div className="flex justify-end">
-                    <Button type="submit">Update Password</Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">Email Notifications</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Receive email notifications for new reservations
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="emailNotifications"
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                        defaultChecked
-                      />
-                      <Label htmlFor="emailNotifications" className="text-sm">
-                        Enable
-                      </Label>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">System Notifications</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Receive in-app notifications for system updates
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="systemNotifications"
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                        defaultChecked
-                      />
-                      <Label htmlFor="systemNotifications" className="text-sm">
-                        Enable
-                      </Label>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">Reservation Reminders</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Receive reminders for upcoming reservations
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="reminderNotifications"
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                        defaultChecked
-                      />
-                      <Label htmlFor="reminderNotifications" className="text-sm">
-                        Enable
-                      </Label>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button>Save Preferences</Button>
+                  <div className="flex justify-between py-2">
+                    <span className="text-muted-foreground">{t("profile.accountType")}</span>
+                    <span>Administrator</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+
+          <div className="md:col-span-2">
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList className="grid grid-cols-3 mb-8">
+                <TabsTrigger value="personal">{t("profile.personalInfo")}</TabsTrigger>
+                <TabsTrigger value="security">{t("profile.accountSettings")}</TabsTrigger>
+                <TabsTrigger value="notifications">{t("profile.notifications")}</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="personal">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("profile.personalInfo")}</CardTitle>
+                    <CardDescription>Update your personal information.</CardDescription>
+                  </CardHeader>
+                  <form onSubmit={handleSaveProfile}>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName">{t("profile.firstName")}</Label>
+                          <Input id="firstName" defaultValue="John" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">{t("profile.lastName")}</Label>
+                          <Input id="lastName" defaultValue="Doe" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">{t("profile.email")}</Label>
+                        <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">{t("profile.phone")}</Label>
+                        <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="position">{t("profile.position")}</Label>
+                          <Input id="position" defaultValue="Manager" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="department">{t("profile.department")}</Label>
+                          <Input id="department" defaultValue="Operations" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="language">{t("profile.language")}</Label>
+                          <Select defaultValue="en">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="en">English</SelectItem>
+                              <SelectItem value="pl">Polski</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="timezone">{t("profile.timezone")}</Label>
+                          <Select defaultValue="utc">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select timezone" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="utc">UTC</SelectItem>
+                              <SelectItem value="est">Eastern Time (ET)</SelectItem>
+                              <SelectItem value="cet">Central European Time (CET)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button variant="outline">{t("profile.cancel")}</Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Saving..." : t("profile.saveChanges")}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="security">
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>{t("profile.changePassword")}</CardTitle>
+                    <CardDescription>Update your password to keep your account secure.</CardDescription>
+                  </CardHeader>
+                  <form onSubmit={handleChangePassword}>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="currentPassword">{t("profile.currentPassword")}</Label>
+                        <Input id="currentPassword" type="password" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="newPassword">{t("profile.newPassword")}</Label>
+                        <Input id="newPassword" type="password" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">{t("profile.confirmPassword")}</Label>
+                        <Input id="confirmPassword" type="password" />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button variant="outline">{t("profile.cancel")}</Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Saving..." : t("profile.saveChanges")}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>{t("profile.twoFactorAuth")}</CardTitle>
+                    <CardDescription>{t("profile.twoFactorDescription")}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2">
+                      <Switch id="twoFactor" />
+                      <Label htmlFor="twoFactor">{t("profile.enableTwoFactor")}</Label>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-destructive">{t("profile.deleteAccount")}</CardTitle>
+                    <CardDescription>{t("profile.deleteAccountWarning")}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="destructive">{t("profile.iUnderstand")}</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="notifications">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("profile.notifications")}</CardTitle>
+                    <CardDescription>Configure how you want to receive notifications.</CardDescription>
+                  </CardHeader>
+                  <form onSubmit={handleSaveSettings}>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{t("profile.emailNotifications")}</p>
+                          <p className="text-sm text-muted-foreground">Receive notifications via email.</p>
+                        </div>
+                        <Switch id="emailNotifications" defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{t("profile.smsNotifications")}</p>
+                          <p className="text-sm text-muted-foreground">Receive notifications via SMS.</p>
+                        </div>
+                        <Switch id="smsNotifications" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{t("profile.pushNotifications")}</p>
+                          <p className="text-sm text-muted-foreground">Receive push notifications in the app.</p>
+                        </div>
+                        <Switch id="pushNotifications" defaultChecked />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button variant="outline">{t("profile.cancel")}</Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Saving..." : t("profile.saveChanges")}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
     </AppLayout>
   )

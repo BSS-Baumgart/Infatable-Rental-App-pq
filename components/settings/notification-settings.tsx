@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 // Define notification template types
 interface NotificationTemplate {
@@ -64,6 +65,7 @@ interface NotificationRule {
 
 export default function NotificationSettings() {
   const { toast } = useToast()
+  const { t } = useTranslation()
 
   // Initial email templates
   const [emailTemplates, setEmailTemplates] = useState<NotificationTemplate[]>([
@@ -209,7 +211,7 @@ export default function NotificationSettings() {
     }
 
     toast({
-      title: active ? "Template activated" : "Template deactivated",
+      title: active ? t("settings.templateActivated") : t("settings.templateDeactivated"),
       description: `The notification template has been ${active ? "activated" : "deactivated"}.`,
     })
   }
@@ -219,7 +221,7 @@ export default function NotificationSettings() {
     setNotificationRules((prev) => prev.map((rule) => (rule.id === id ? { ...rule, active } : rule)))
 
     toast({
-      title: active ? "Rule activated" : "Rule deactivated",
+      title: active ? t("settings.ruleActivated") : t("settings.ruleDeactivated"),
       description: `The notification rule has been ${active ? "activated" : "deactivated"}.`,
     })
   }
@@ -267,7 +269,7 @@ export default function NotificationSettings() {
     setCurrentTemplate(null)
 
     toast({
-      title: "Template saved",
+      title: t("settings.templateSaved"),
       description: "The notification template has been saved successfully.",
     })
   }
@@ -284,7 +286,7 @@ export default function NotificationSettings() {
     setNotificationRules((prev) => prev.filter((rule) => rule.templateId !== id))
 
     toast({
-      title: "Template deleted",
+      title: t("settings.templateDeleted"),
       description: "The notification template has been deleted successfully.",
     })
   }
@@ -320,7 +322,7 @@ export default function NotificationSettings() {
     setCurrentRule(null)
 
     toast({
-      title: "Rule saved",
+      title: t("settings.ruleSaved"),
       description: "The notification rule has been saved successfully.",
     })
   }
@@ -330,7 +332,7 @@ export default function NotificationSettings() {
     setNotificationRules((prev) => prev.filter((rule) => rule.id !== id))
 
     toast({
-      title: "Rule deleted",
+      title: t("settings.ruleDeleted"),
       description: "The notification rule has been deleted successfully.",
     })
   }
@@ -338,7 +340,7 @@ export default function NotificationSettings() {
   // Save provider settings
   const saveProviderSettings = () => {
     toast({
-      title: "Settings saved",
+      title: t("settings.settingsSaved"),
       description: "Notification provider settings have been saved successfully.",
     })
   }
@@ -346,7 +348,7 @@ export default function NotificationSettings() {
   // Send test notification
   const sendTestNotification = (templateId: string, type: "email" | "sms") => {
     toast({
-      title: "Test notification sent",
+      title: t("settings.testNotificationSent"),
       description: `A test ${type} has been sent using the selected template.`,
     })
   }
@@ -357,19 +359,19 @@ export default function NotificationSettings() {
         <TabsList className="mb-4">
           <TabsTrigger value="rules">
             <Bell className="h-4 w-4 mr-2" />
-            Notification Rules
+            {t("settings.notificationRules")}
           </TabsTrigger>
           <TabsTrigger value="email">
             <Mail className="h-4 w-4 mr-2" />
-            Email Templates
+            {t("settings.emailTemplates")}
           </TabsTrigger>
           <TabsTrigger value="sms">
             <MessageSquare className="h-4 w-4 mr-2" />
-            SMS Templates
+            {t("settings.smsTemplates")}
           </TabsTrigger>
           <TabsTrigger value="providers">
             <Send className="h-4 w-4 mr-2" />
-            Providers
+            {t("settings.providers")}
           </TabsTrigger>
         </TabsList>
 
@@ -377,29 +379,27 @@ export default function NotificationSettings() {
         <TabsContent value="rules">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Notification Rules</CardTitle>
+              <CardTitle>{t("settings.notificationRules")}</CardTitle>
               <Button onClick={() => openRuleEditor(null, true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Rule
+                {t("settings.addRule")}
               </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Configure when and how notifications are sent to clients and administrators.
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t("settings.notificationRulesDescription")}</p>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-800">
-                        <th className="text-left font-medium p-2">Rule Name</th>
-                        <th className="text-left font-medium p-2">Event</th>
-                        <th className="text-left font-medium p-2">Template</th>
-                        <th className="text-left font-medium p-2">Recipients</th>
-                        <th className="text-left font-medium p-2">Timing</th>
-                        <th className="text-center font-medium p-2">Active</th>
-                        <th className="text-right font-medium p-2">Actions</th>
+                        <th className="text-left font-medium p-2">{t("settings.ruleName")}</th>
+                        <th className="text-left font-medium p-2">{t("settings.event")}</th>
+                        <th className="text-left font-medium p-2">{t("settings.template")}</th>
+                        <th className="text-left font-medium p-2">{t("settings.recipients")}</th>
+                        <th className="text-left font-medium p-2">{t("settings.timing")}</th>
+                        <th className="text-center font-medium p-2">{t("settings.active")}</th>
+                        <th className="text-right font-medium p-2">{t("settings.actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -411,12 +411,12 @@ export default function NotificationSettings() {
                           <tr key={rule.id} className="border-b border-gray-100 dark:border-gray-800">
                             <td className="p-2 font-medium">{rule.name}</td>
                             <td className="p-2">
-                              {rule.event === "reservation_created" && "Reservation Created"}
-                              {rule.event === "reservation_reminder" && "Reservation Reminder"}
-                              {rule.event === "reservation_cancelled" && "Reservation Cancelled"}
-                              {rule.event === "invoice_created" && "Invoice Created"}
-                              {rule.event === "payment_received" && "Payment Received"}
-                              {rule.event === "maintenance_due" && "Maintenance Due"}
+                              {rule.event === "reservation_created" && t("settings.reservationCreated")}
+                              {rule.event === "reservation_reminder" && t("settings.reservationReminder")}
+                              {rule.event === "reservation_cancelled" && t("settings.reservationCancelled")}
+                              {rule.event === "invoice_created" && t("settings.invoiceCreated")}
+                              {rule.event === "payment_received" && t("settings.paymentReceived")}
+                              {rule.event === "maintenance_due" && t("settings.maintenanceDue")}
                             </td>
                             <td className="p-2">
                               {template ? (
@@ -429,22 +429,24 @@ export default function NotificationSettings() {
                                   {template.name}
                                 </span>
                               ) : (
-                                <span className="text-red-500">Template not found</span>
+                                <span className="text-red-500">{t("settings.templateNotFound")}</span>
                               )}
                             </td>
                             <td className="p-2">
-                              {rule.recipients === "client" && "Client"}
-                              {rule.recipients === "admin" && "Administrator"}
-                              {rule.recipients === "both" && "Both"}
+                              {rule.recipients === "client" && t("settings.client")}
+                              {rule.recipients === "admin" && t("settings.administrator")}
+                              {rule.recipients === "both" && t("settings.both")}
                             </td>
                             <td className="p-2">
                               {rule.timing ? (
                                 <>
-                                  {rule.timing.beforeEvent && `${rule.timing.beforeEvent} ${rule.timing.unit} before`}
-                                  {rule.timing.afterEvent && `${rule.timing.afterEvent} ${rule.timing.unit} after`}
+                                  {rule.timing.beforeEvent &&
+                                    `${rule.timing.beforeEvent} ${rule.timing.unit} ${t("settings.before")}`}
+                                  {rule.timing.afterEvent &&
+                                    `${rule.timing.afterEvent} ${rule.timing.unit} ${t("settings.after")}`}
                                 </>
                               ) : (
-                                "Immediately"
+                                t("settings.immediately")
                               )}
                             </td>
                             <td className="p-2 text-center">
@@ -457,26 +459,27 @@ export default function NotificationSettings() {
                               <div className="flex justify-end gap-2">
                                 <Button variant="ghost" size="sm" onClick={() => openRuleEditor(rule)}>
                                   <Edit className="h-4 w-4" />
-                                  <span className="sr-only">Edit</span>
+                                  <span className="sr-only">{t("settings.edit")}</span>
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button variant="ghost" size="sm">
                                       <Trash2 className="h-4 w-4 text-red-500" />
-                                      <span className="sr-only">Delete</span>
+                                      <span className="sr-only">{t("settings.delete")}</span>
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete notification rule</AlertDialogTitle>
+                                      <AlertDialogTitle>{t("settings.deleteNotificationRule")}</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete this notification rule? This action cannot be
-                                        undone.
+                                        {t("settings.deleteNotificationRuleConfirmation")}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => deleteRule(rule.id)}>Delete</AlertDialogAction>
+                                      <AlertDialogCancel>{t("settings.cancel")}</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => deleteRule(rule.id)}>
+                                        {t("settings.delete")}
+                                      </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
@@ -497,28 +500,24 @@ export default function NotificationSettings() {
         <TabsContent value="email">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Email Templates</CardTitle>
+              <CardTitle>{t("settings.emailTemplates")}</CardTitle>
               <Button onClick={() => openTemplateEditor({ type: "email" } as NotificationTemplate, true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Template
+                {t("settings.addTemplate")}
               </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Customize email templates for different notification types. You can use variables like
-                  <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{"{{client.firstName}}"}</code> or
-                  <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{"{{reservation.startDate}}"}</code>.
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t("settings.emailTemplatesDescription")}</p>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-800">
-                        <th className="text-left font-medium p-2">Template Name</th>
-                        <th className="text-left font-medium p-2">Subject</th>
-                        <th className="text-center font-medium p-2">Active</th>
-                        <th className="text-right font-medium p-2">Actions</th>
+                        <th className="text-left font-medium p-2">{t("settings.templateName")}</th>
+                        <th className="text-left font-medium p-2">{t("settings.subject")}</th>
+                        <th className="text-center font-medium p-2">{t("settings.active")}</th>
+                        <th className="text-right font-medium p-2">{t("settings.actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -536,11 +535,11 @@ export default function NotificationSettings() {
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setPreviewTemplate(template)}>
                                 <Eye className="h-4 w-4" />
-                                <span className="sr-only">Preview</span>
+                                <span className="sr-only">{t("settings.preview")}</span>
                               </Button>
                               <Button variant="ghost" size="sm" onClick={() => openTemplateEditor(template)}>
                                 <Edit className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
+                                <span className="sr-only">{t("settings.edit")}</span>
                               </Button>
                               <Button
                                 variant="ghost"
@@ -548,27 +547,26 @@ export default function NotificationSettings() {
                                 onClick={() => sendTestNotification(template.id, "email")}
                               >
                                 <Send className="h-4 w-4" />
-                                <span className="sr-only">Send Test</span>
+                                <span className="sr-only">{t("settings.sendTest")}</span>
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="sm">
                                     <Trash2 className="h-4 w-4 text-red-500" />
-                                    <span className="sr-only">Delete</span>
+                                    <span className="sr-only">{t("settings.delete")}</span>
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete email template</AlertDialogTitle>
+                                    <AlertDialogTitle>{t("settings.deleteEmailTemplate")}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to delete this email template? This will also remove any
-                                      notification rules using this template.
+                                      {t("settings.deleteEmailTemplateConfirmation")}
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>{t("settings.cancel")}</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => deleteTemplate(template.id, "email")}>
-                                      Delete
+                                      {t("settings.delete")}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -589,27 +587,24 @@ export default function NotificationSettings() {
         <TabsContent value="sms">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>SMS Templates</CardTitle>
+              <CardTitle>{t("settings.smsTemplates")}</CardTitle>
               <Button onClick={() => openTemplateEditor({ type: "sms" } as NotificationTemplate, true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Template
+                {t("settings.addTemplate")}
               </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Create SMS templates for different notification types. Keep messages concise and under 160 characters
-                  when possible.
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t("settings.smsTemplatesDescription")}</p>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-800">
-                        <th className="text-left font-medium p-2">Template Name</th>
-                        <th className="text-left font-medium p-2">Content Preview</th>
-                        <th className="text-center font-medium p-2">Active</th>
-                        <th className="text-right font-medium p-2">Actions</th>
+                        <th className="text-left font-medium p-2">{t("settings.templateName")}</th>
+                        <th className="text-left font-medium p-2">{t("settings.contentPreview")}</th>
+                        <th className="text-center font-medium p-2">{t("settings.active")}</th>
+                        <th className="text-right font-medium p-2">{t("settings.actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -631,11 +626,11 @@ export default function NotificationSettings() {
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setPreviewTemplate(template)}>
                                 <Eye className="h-4 w-4" />
-                                <span className="sr-only">Preview</span>
+                                <span className="sr-only">{t("settings.preview")}</span>
                               </Button>
                               <Button variant="ghost" size="sm" onClick={() => openTemplateEditor(template)}>
                                 <Edit className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
+                                <span className="sr-only">{t("settings.edit")}</span>
                               </Button>
                               <Button
                                 variant="ghost"
@@ -643,27 +638,26 @@ export default function NotificationSettings() {
                                 onClick={() => sendTestNotification(template.id, "sms")}
                               >
                                 <Send className="h-4 w-4" />
-                                <span className="sr-only">Send Test</span>
+                                <span className="sr-only">{t("settings.sendTest")}</span>
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="sm">
                                     <Trash2 className="h-4 w-4 text-red-500" />
-                                    <span className="sr-only">Delete</span>
+                                    <span className="sr-only">{t("settings.delete")}</span>
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete SMS template</AlertDialogTitle>
+                                    <AlertDialogTitle>{t("settings.deleteSmsTemplate")}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to delete this SMS template? This will also remove any
-                                      notification rules using this template.
+                                      {t("settings.deleteSmsTemplateConfirmation")}
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>{t("settings.cancel")}</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => deleteTemplate(template.id, "sms")}>
-                                      Delete
+                                      {t("settings.delete")}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -686,18 +680,18 @@ export default function NotificationSettings() {
             {/* Email Provider Settings */}
             <Card>
               <CardHeader>
-                <CardTitle>Email Provider</CardTitle>
+                <CardTitle>{t("settings.emailProvider")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="emailProvider">Provider</Label>
+                    <Label htmlFor="emailProvider">{t("settings.provider")}</Label>
                     <Select
                       value={emailSettings.provider}
                       onValueChange={(value) => setEmailSettings({ ...emailSettings, provider: value })}
                     >
                       <SelectTrigger id="emailProvider">
-                        <SelectValue placeholder="Select provider" />
+                        <SelectValue placeholder={t("settings.selectProvider")} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="smtp">SMTP Server</SelectItem>
@@ -710,7 +704,7 @@ export default function NotificationSettings() {
                   {emailSettings.provider === "smtp" && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="smtpHost">SMTP Host</Label>
+                        <Label htmlFor="smtpHost">{t("settings.smtpHost")}</Label>
                         <Input
                           id="smtpHost"
                           value={emailSettings.smtpHost}
@@ -718,7 +712,7 @@ export default function NotificationSettings() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="smtpPort">SMTP Port</Label>
+                        <Label htmlFor="smtpPort">{t("settings.smtpPort")}</Label>
                         <Input
                           id="smtpPort"
                           value={emailSettings.smtpPort}
@@ -726,7 +720,7 @@ export default function NotificationSettings() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="smtpUsername">SMTP Username</Label>
+                        <Label htmlFor="smtpUsername">{t("settings.smtpUsername")}</Label>
                         <Input
                           id="smtpUsername"
                           value={emailSettings.smtpUsername}
@@ -734,7 +728,7 @@ export default function NotificationSettings() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="smtpPassword">SMTP Password</Label>
+                        <Label htmlFor="smtpPassword">{t("settings.smtpPassword")}</Label>
                         <Input
                           id="smtpPassword"
                           type="password"
@@ -746,7 +740,7 @@ export default function NotificationSettings() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="senderEmail">Sender Email</Label>
+                    <Label htmlFor="senderEmail">{t("settings.senderEmail")}</Label>
                     <Input
                       id="senderEmail"
                       value={emailSettings.senderEmail}
@@ -754,7 +748,7 @@ export default function NotificationSettings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="senderName">Sender Name</Label>
+                    <Label htmlFor="senderName">{t("settings.senderName")}</Label>
                     <Input
                       id="senderName"
                       value={emailSettings.senderName}
@@ -762,7 +756,7 @@ export default function NotificationSettings() {
                     />
                   </div>
 
-                  <Button onClick={saveProviderSettings}>Save Email Settings</Button>
+                  <Button onClick={saveProviderSettings}>{t("settings.saveEmailSettings")}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -770,18 +764,18 @@ export default function NotificationSettings() {
             {/* SMS Provider Settings */}
             <Card>
               <CardHeader>
-                <CardTitle>SMS Provider</CardTitle>
+                <CardTitle>{t("settings.smsProvider")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="smsProvider">Provider</Label>
+                    <Label htmlFor="smsProvider">{t("settings.provider")}</Label>
                     <Select
                       value={smsSettings.provider}
                       onValueChange={(value) => setSmsSetting({ ...smsSettings, provider: value })}
                     >
                       <SelectTrigger id="smsProvider">
-                        <SelectValue placeholder="Select provider" />
+                        <SelectValue placeholder={t("settings.selectProvider")} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="twilio">Twilio</SelectItem>
@@ -794,7 +788,7 @@ export default function NotificationSettings() {
                   {smsSettings.provider === "twilio" && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="accountSid">Account SID</Label>
+                        <Label htmlFor="accountSid">{t("settings.accountSid")}</Label>
                         <Input
                           id="accountSid"
                           value={smsSettings.accountSid}
@@ -802,7 +796,7 @@ export default function NotificationSettings() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="authToken">Auth Token</Label>
+                        <Label htmlFor="authToken">{t("settings.authToken")}</Label>
                         <Input
                           id="authToken"
                           type="password"
@@ -814,7 +808,7 @@ export default function NotificationSettings() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="fromNumber">From Number</Label>
+                    <Label htmlFor="fromNumber">{t("settings.fromNumber")}</Label>
                     <Input
                       id="fromNumber"
                       value={smsSettings.fromNumber}
@@ -822,7 +816,7 @@ export default function NotificationSettings() {
                     />
                   </div>
 
-                  <Button onClick={saveProviderSettings}>Save SMS Settings</Button>
+                  <Button onClick={saveProviderSettings}>{t("settings.saveSmsSettings")}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -834,17 +828,17 @@ export default function NotificationSettings() {
       <Dialog open={isEditingTemplate} onOpenChange={setIsEditingTemplate}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{currentTemplate?.id ? "Edit Template" : "Create Template"}</DialogTitle>
+            <DialogTitle>{currentTemplate?.id ? t("settings.editTemplate") : t("settings.createTemplate")}</DialogTitle>
             <DialogDescription>
               {currentTemplate?.type === "email"
-                ? "Customize the email template. You can use HTML and variables like {{client.firstName}}."
-                : "Create an SMS template. Keep it concise and under 160 characters when possible."}
+                ? t("settings.customizeEmailTemplate")
+                : t("settings.createSmsTemplate")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="templateName">Template Name</Label>
+              <Label htmlFor="templateName">{t("settings.templateName")}</Label>
               <Input
                 id="templateName"
                 value={currentTemplate?.name || ""}
@@ -854,7 +848,7 @@ export default function NotificationSettings() {
 
             {currentTemplate?.type === "email" && (
               <div className="space-y-2">
-                <Label htmlFor="templateSubject">Email Subject</Label>
+                <Label htmlFor="templateSubject">{t("settings.emailSubject")}</Label>
                 <Input
                   id="templateSubject"
                   value={currentTemplate?.subject || ""}
@@ -865,7 +859,7 @@ export default function NotificationSettings() {
 
             <div className="space-y-2">
               <Label htmlFor="templateContent">
-                {currentTemplate?.type === "email" ? "Email Content (HTML)" : "SMS Content"}
+                {currentTemplate?.type === "email" ? t("settings.emailContent") : t("settings.smsContent")}
               </Label>
               <Textarea
                 id="templateContent"
@@ -877,10 +871,10 @@ export default function NotificationSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>Available Variables</Label>
+              <Label>{t("settings.availableVariables")}</Label>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <p className="font-medium">Client</p>
+                  <p className="font-medium">{t("settings.client")}</p>
                   <ul className="list-disc pl-5 text-gray-500 dark:text-gray-400">
                     <li>{"{{client.firstName}}"}</li>
                     <li>{"{{client.lastName}}"}</li>
@@ -889,7 +883,7 @@ export default function NotificationSettings() {
                   </ul>
                 </div>
                 <div>
-                  <p className="font-medium">Reservation</p>
+                  <p className="font-medium">{t("settings.reservation")}</p>
                   <ul className="list-disc pl-5 text-gray-500 dark:text-gray-400">
                     <li>{"{{reservation.startDate}}"}</li>
                     <li>{"{{reservation.endDate}}"}</li>
@@ -903,9 +897,9 @@ export default function NotificationSettings() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditingTemplate(false)}>
-              Cancel
+              {t("settings.cancel")}
             </Button>
-            <Button onClick={saveTemplate}>Save Template</Button>
+            <Button onClick={saveTemplate}>{t("settings.saveTemplate")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -914,19 +908,21 @@ export default function NotificationSettings() {
       <Dialog open={!!previewTemplate} onOpenChange={() => setPreviewTemplate(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Preview: {previewTemplate?.name}</DialogTitle>
-            <DialogDescription>This is how your notification will appear with sample data.</DialogDescription>
+            <DialogTitle>
+              {t("settings.preview")}: {previewTemplate?.name}
+            </DialogTitle>
+            <DialogDescription>{t("settings.previewDescription")}</DialogDescription>
           </DialogHeader>
 
           {previewTemplate?.type === "email" && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <p className="text-sm font-medium">Subject:</p>
+                <p className="text-sm font-medium">{t("settings.subject")}:</p>
                 <p className="text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded">{previewTemplate.subject}</p>
               </div>
 
               <div className="space-y-1">
-                <p className="text-sm font-medium">Content:</p>
+                <p className="text-sm font-medium">{t("settings.content")}:</p>
                 <div className="border rounded p-4 bg-white dark:bg-gray-950">
                   <div
                     dangerouslySetInnerHTML={{
@@ -952,7 +948,7 @@ export default function NotificationSettings() {
           {previewTemplate?.type === "sms" && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <p className="text-sm font-medium">SMS Content:</p>
+                <p className="text-sm font-medium">{t("settings.smsContent")}:</p>
                 <div className="border rounded p-4 bg-gray-50 dark:bg-gray-900">
                   <p className="text-sm">
                     {previewTemplate.content
@@ -968,11 +964,11 @@ export default function NotificationSettings() {
               </div>
 
               <div className="space-y-1">
-                <p className="text-sm font-medium">Character Count:</p>
+                <p className="text-sm font-medium">{t("settings.characterCount")}:</p>
                 <p className="text-sm">
-                  {previewTemplate.content.length} characters
+                  {previewTemplate.content.length} {t("settings.characters")}
                   {previewTemplate.content.length > 160 && (
-                    <span className="text-amber-500 ml-2">(May be split into multiple messages)</span>
+                    <span className="text-amber-500 ml-2">({t("settings.multipleSmsWarning")})</span>
                   )}
                 </p>
               </div>
@@ -980,7 +976,7 @@ export default function NotificationSettings() {
           )}
 
           <DialogFooter>
-            <Button onClick={() => setPreviewTemplate(null)}>Close</Button>
+            <Button onClick={() => setPreviewTemplate(null)}>{t("settings.close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -989,13 +985,13 @@ export default function NotificationSettings() {
       <Dialog open={isEditingRule} onOpenChange={setIsEditingRule}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{currentRule?.id ? "Edit Rule" : "Create Rule"}</DialogTitle>
-            <DialogDescription>Configure when and how notifications are sent.</DialogDescription>
+            <DialogTitle>{currentRule?.id ? t("settings.editRule") : t("settings.createRule")}</DialogTitle>
+            <DialogDescription>{t("settings.configureNotifications")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="ruleName">Rule Name</Label>
+              <Label htmlFor="ruleName">{t("settings.ruleName")}</Label>
               <Input
                 id="ruleName"
                 value={currentRule?.name || ""}
@@ -1004,42 +1000,42 @@ export default function NotificationSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ruleEvent">Event</Label>
+              <Label htmlFor="ruleEvent">{t("settings.event")}</Label>
               <Select
                 value={currentRule?.event}
                 onValueChange={(value: any) => setCurrentRule((prev) => (prev ? { ...prev, event: value } : null))}
               >
                 <SelectTrigger id="ruleEvent">
-                  <SelectValue placeholder="Select event" />
+                  <SelectValue placeholder={t("settings.selectEvent")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_reservation_created">Reservation Created</SelectItem>
-                  <SelectItem value="_reservation_reminder">Reservation Reminder</SelectItem>
-                  <SelectItem value="_reservation_cancelled">Reservation Cancelled</SelectItem>
-                  <SelectItem value="_invoice_created">Invoice Created</SelectItem>
-                  <SelectItem value="_payment_received">Payment Received</SelectItem>
-                  <SelectItem value="_maintenance_due">Maintenance Due</SelectItem>
+                  <SelectItem value="_reservation_created">{t("settings.reservationCreated")}</SelectItem>
+                  <SelectItem value="_reservation_reminder">{t("settings.reservationReminder")}</SelectItem>
+                  <SelectItem value="_reservation_cancelled">{t("settings.reservationCancelled")}</SelectItem>
+                  <SelectItem value="_invoice_created">{t("settings.invoiceCreated")}</SelectItem>
+                  <SelectItem value="_payment_received">{t("settings.paymentReceived")}</SelectItem>
+                  <SelectItem value="_maintenance_due">{t("settings.maintenanceDue")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ruleTemplate">Template</Label>
+              <Label htmlFor="ruleTemplate">{t("settings.template")}</Label>
               <Select
                 value={currentRule?.templateId}
                 onValueChange={(value) => setCurrentRule((prev) => (prev ? { ...prev, templateId: value } : null))}
               >
                 <SelectTrigger id="ruleTemplate">
-                  <SelectValue placeholder="Select template" />
+                  <SelectValue placeholder={t("settings.selectTemplate")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none" disabled>
-                    Select a template
+                    {t("settings.selectTemplate")}
                   </SelectItem>
                   {emailTemplates.length > 0 && (
                     <>
                       <SelectItem value="_email_header" disabled className="font-medium">
-                        Email Templates
+                        {t("settings.emailTemplates")}
                       </SelectItem>
                       {emailTemplates.map((template) => (
                         <SelectItem key={template.id} value={template.id}>
@@ -1051,7 +1047,7 @@ export default function NotificationSettings() {
                   {smsTemplates.length > 0 && (
                     <>
                       <SelectItem value="_sms_header" disabled className="font-medium">
-                        SMS Templates
+                        {t("settings.smsTemplates")}
                       </SelectItem>
                       {smsTemplates.map((template) => (
                         <SelectItem key={template.id} value={template.id}>
@@ -1065,18 +1061,18 @@ export default function NotificationSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ruleRecipients">Recipients</Label>
+              <Label htmlFor="ruleRecipients">{t("settings.recipients")}</Label>
               <Select
                 value={currentRule?.recipients}
                 onValueChange={(value: any) => setCurrentRule((prev) => (prev ? { ...prev, recipients: value } : null))}
               >
                 <SelectTrigger id="ruleRecipients">
-                  <SelectValue placeholder="Select recipients" />
+                  <SelectValue placeholder={t("settings.selectRecipients")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="client">Client Only</SelectItem>
-                  <SelectItem value="admin">Administrator Only</SelectItem>
-                  <SelectItem value="both">Both Client and Administrator</SelectItem>
+                  <SelectItem value="client">{t("settings.clientOnly")}</SelectItem>
+                  <SelectItem value="admin">{t("settings.administratorOnly")}</SelectItem>
+                  <SelectItem value="both">{t("settings.bothClientAndAdmin")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1085,7 +1081,7 @@ export default function NotificationSettings() {
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="flex-1 space-y-2">
-                    <Label htmlFor="timingValue">Send</Label>
+                    <Label htmlFor="timingValue">{t("settings.send")}</Label>
                     <Input
                       id="timingValue"
                       type="number"
@@ -1109,7 +1105,7 @@ export default function NotificationSettings() {
                   </div>
 
                   <div className="flex-1 space-y-2">
-                    <Label htmlFor="timingUnit">Unit</Label>
+                    <Label htmlFor="timingUnit">{t("settings.unit")}</Label>
                     <Select
                       value={currentRule?.timing?.unit || "days"}
                       onValueChange={(value: any) =>
@@ -1127,17 +1123,17 @@ export default function NotificationSettings() {
                       }
                     >
                       <SelectTrigger id="timingUnit">
-                        <SelectValue placeholder="Select unit" />
+                        <SelectValue placeholder={t("settings.selectUnit")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="hours">Hours</SelectItem>
-                        <SelectItem value="days">Days</SelectItem>
+                        <SelectItem value="hours">{t("settings.hours")}</SelectItem>
+                        <SelectItem value="days">{t("settings.days")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="flex-1 space-y-2">
-                    <Label htmlFor="timingType">When</Label>
+                    <Label htmlFor="timingType">{t("settings.when")}</Label>
                     <Select
                       value={currentRule?.timing?.beforeEvent ? "before" : "after"}
                       onValueChange={(value) => {
@@ -1169,11 +1165,11 @@ export default function NotificationSettings() {
                       }}
                     >
                       <SelectTrigger id="timingType">
-                        <SelectValue placeholder="Select when" />
+                        <SelectValue placeholder={t("settings.selectWhen")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="before">Before Event</SelectItem>
-                        <SelectItem value="after">After Event</SelectItem>
+                        <SelectItem value="before">{t("settings.beforeEvent")}</SelectItem>
+                        <SelectItem value="after">{t("settings.afterEvent")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1184,9 +1180,9 @@ export default function NotificationSettings() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditingRule(false)}>
-              Cancel
+              {t("settings.cancel")}
             </Button>
-            <Button onClick={saveRule}>Save Rule</Button>
+            <Button onClick={saveRule}>{t("settings.saveRule")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

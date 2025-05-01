@@ -15,6 +15,7 @@ import ReservationWizard from "@/components/modals/reservation-wizard"
 import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 const statusColors: Record<ReservationStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -26,6 +27,7 @@ const statusColors: Record<ReservationStatus, string> = {
 type CalendarView = "month" | "list"
 
 export default function CalendarPage() {
+  const { t } = useTranslation()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null)
@@ -142,10 +144,10 @@ export default function CalendarPage() {
   const handleSaveReservation = (data: Partial<Reservation>) => {
     // In a real app, this would update the reservation in the database
     toast({
-      title: currentReservation ? "Reservation updated" : "Reservation created",
+      title: currentReservation ? t("reservations.updated") : t("reservations.created"),
       description: currentReservation
-        ? `Reservation #${currentReservation?.id} has been updated successfully.`
-        : "New reservation has been created successfully.",
+        ? t("reservations.updateSuccess", { id: currentReservation?.id })
+        : t("reservations.createSuccess"),
     })
     handleCloseModal()
   }
@@ -164,11 +166,11 @@ export default function CalendarPage() {
       <div className="space-y-4 md:space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center justify-between md:justify-start gap-2 md:gap-4">
-            <h1 className="text-xl md:text-2xl font-bold">Calendar</h1>
+            <h1 className="text-xl md:text-2xl font-bold">{t("calendar.title")}</h1>
             <Button onClick={() => handleOpenModal()} size="sm" className="md:ml-2">
               <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">New Reservation</span>
-              <span className="sm:hidden">New</span>
+              <span className="hidden sm:inline">{t("reservations.new")}</span>
+              <span className="sm:hidden">{t("common.new")}</span>
             </Button>
           </div>
 
@@ -190,10 +192,12 @@ export default function CalendarPage() {
               size="sm"
               onClick={toggleView}
               className="ml-2"
-              title={view === "month" ? "Switch to list view" : "Switch to month view"}
+              title={view === "month" ? t("calendar.switchToList") : t("calendar.switchToMonth")}
             >
               {view === "month" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
-              <span className="sr-only md:not-sr-only md:ml-2">{view === "month" ? "List" : "Month"}</span>
+              <span className="sr-only md:not-sr-only md:ml-2">
+                {view === "month" ? t("calendar.list") : t("calendar.month")}
+              </span>
             </Button>
           </div>
         </div>
@@ -202,7 +206,15 @@ export default function CalendarPage() {
           <Card>
             <CardContent className="p-0 overflow-x-auto">
               <div className="grid grid-cols-7 text-center min-w-[700px]">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                {[
+                  t("calendar.sunday"),
+                  t("calendar.monday"),
+                  t("calendar.tuesday"),
+                  t("calendar.wednesday"),
+                  t("calendar.thursday"),
+                  t("calendar.friday"),
+                  t("calendar.saturday"),
+                ].map((day) => (
                   <div key={day} className="py-2 font-medium text-sm border-b border-gray-200 dark:border-gray-800">
                     {day}
                   </div>
@@ -281,7 +293,9 @@ export default function CalendarPage() {
                                 </div>
                               </div>
                               <div className="flex flex-col items-end">
-                                <Badge className={statusColors[reservation.status]}>{reservation.status}</Badge>
+                                <Badge className={statusColors[reservation.status]}>
+                                  {t(`reservations.status.${reservation.status}`)}
+                                </Badge>
                                 <div className="text-sm font-medium mt-1">${reservation.totalPrice}</div>
                               </div>
                             </div>
@@ -303,7 +317,7 @@ export default function CalendarPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">No reservations found for this month</div>
+                <div className="text-center py-8 text-muted-foreground">{t("calendar.noReservations")}</div>
               )}
             </CardContent>
           </Card>

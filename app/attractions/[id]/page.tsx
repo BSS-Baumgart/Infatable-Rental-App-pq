@@ -34,8 +34,10 @@ import AttractionModal from "@/components/modals/attraction-modal"
 import MaintenanceModal from "@/components/modals/maintenance-modal"
 import DocumentModal from "@/components/modals/document-modal"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 export default function AttractionDetailPage({ params }: { params: { id: string } }) {
+  const { t } = useTranslation()
   const [attraction, setAttraction] = useState<Attraction | null>(null)
   const [relatedReservations, setRelatedReservations] = useState<Reservation[]>([])
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([])
@@ -100,8 +102,8 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
     // Update the attraction
     setAttraction((prev) => (prev ? ({ ...prev, ...data } as Attraction) : null))
     toast({
-      title: "Attraction updated",
-      description: `${data.name} has been updated successfully.`,
+      title: t("attractions.updated"),
+      description: t("attractions.updateSuccess", { name: data.name }),
     })
     handleCloseAttractionModal()
   }
@@ -115,8 +117,8 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
         ),
       )
       toast({
-        title: "Maintenance record updated",
-        description: "The maintenance record has been updated successfully.",
+        title: t("common.updated"),
+        description: t("common.updateSuccess", { item: t("attractionDetails.maintenanceRecord") }),
       })
     } else {
       // Create new maintenance record
@@ -129,8 +131,8 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
 
       setMaintenanceRecords((prev) => [...prev, newRecord])
       toast({
-        title: "Maintenance record added",
-        description: "A new maintenance record has been added successfully.",
+        title: t("common.added"),
+        description: t("common.addSuccess", { item: t("attractionDetails.maintenanceRecord") }),
       })
     }
     handleCloseMaintenanceModal()
@@ -143,8 +145,8 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
         prev.map((doc) => (doc.id === currentDocument.id ? ({ ...doc, ...data } as Document) : doc)),
       )
       toast({
-        title: "Document updated",
-        description: "The document has been updated successfully.",
+        title: t("common.updated"),
+        description: t("common.updateSuccess", { item: t("common.document") }),
       })
     } else {
       // Create new document
@@ -160,19 +162,19 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
 
       setDocuments((prev) => [...prev, newDocument])
       toast({
-        title: "Document added",
-        description: "A new document has been added successfully.",
+        title: t("common.added"),
+        description: t("common.addSuccess", { item: t("common.document") }),
       })
     }
     handleCloseDocumentModal()
   }
 
   const handleDeleteDocument = (id: string) => {
-    if (confirm("Are you sure you want to delete this document?")) {
+    if (confirm(t("common.confirmDelete", { item: t("common.document") }))) {
       setDocuments((prev) => prev.filter((doc) => doc.id !== id))
       toast({
-        title: "Document deleted",
-        description: "The document has been deleted successfully.",
+        title: t("common.deleted"),
+        description: t("common.deleteSuccess", { item: t("common.document") }),
       })
     }
   }
@@ -181,10 +183,10 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center h-[60vh]">
-          <h1 className="text-2xl font-bold mb-4">Attraction not found</h1>
+          <h1 className="text-2xl font-bold mb-4">{t("common.notFound", { item: t("common.attraction") })}</h1>
           <Button onClick={() => router.push("/attractions")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Attractions
+            {t("attractionDetails.back")}
           </Button>
         </div>
       </AppLayout>
@@ -198,13 +200,13 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => router.push("/attractions")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              {t("common.back")}
             </Button>
             <h1 className="text-2xl font-bold">{attraction.name}</h1>
           </div>
           <Button onClick={handleOpenAttractionModal}>
             <Edit className="mr-2 h-4 w-4" />
-            Edit Attraction
+            {t("attractionDetails.editAttraction")}
           </Button>
         </div>
 
@@ -223,29 +225,31 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">ID:</span>
+                    <span className="font-medium">{t("attractionDetails.id")}:</span>
                     <span>{attraction.id}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Setup Time:</span>
-                    <span>{attraction.setupTime} minutes</span>
+                    <span className="font-medium">{t("attractionDetails.setupTime")}:</span>
+                    <span>
+                      {attraction.setupTime} {t("calendar.minutes")}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Ruler className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Dimensions:</span>
+                    <span className="font-medium">{t("attractionDetails.dimensions")}:</span>
                     <span>
                       {attraction.width}cm × {attraction.length}cm × {attraction.height}cm
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Weight className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Weight:</span>
+                    <span className="font-medium">{t("attractionDetails.weight")}:</span>
                     <span>{attraction.weight} kg</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Price:</span>
+                    <span className="font-medium">{t("attractionDetails.price")}:</span>
                     <span className="text-lg font-bold">${attraction.price}</span>
                   </div>
                 </div>
@@ -256,15 +260,15 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
           <div className="lg:col-span-2">
             <Tabs defaultValue="reservations" className="w-full">
               <TabsList className="mb-4">
-                <TabsTrigger value="reservations">Reservations</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+                <TabsTrigger value="reservations">{t("reservations.title")}</TabsTrigger>
+                <TabsTrigger value="documents">{t("common.documents")}</TabsTrigger>
+                <TabsTrigger value="maintenance">{t("attractionDetails.maintenance")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="reservations">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Related Reservations</CardTitle>
+                    <CardTitle>{t("attractionDetails.relatedReservations")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {relatedReservations.length > 0 ? (
@@ -277,14 +281,15 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                           >
                             <div>
                               <div className="font-medium">
-                                {reservation.client?.firstName} {reservation.client?.lastName || "Unknown Client"}
+                                {reservation.client?.firstName}{" "}
+                                {reservation.client?.lastName || t("reservations.unknownClient")}
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(reservation.startDate).toLocaleDateString()} -{" "}
                                 {new Date(reservation.endDate).toLocaleDateString()}
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {reservation.attractions.length} attraction(s)
+                                {reservation.attractions.length} {t("common.attractions")}
                               </div>
                             </div>
                             <div className="flex items-center gap-4">
@@ -301,8 +306,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                                           : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                                   }
                                 >
-                                  {reservation.status.charAt(0).toUpperCase() +
-                                    reservation.status.slice(1).replace("-", " ")}
+                                  {t(`reservations.status.${reservation.status}`)}
                                 </Badge>
                               </div>
                             </div>
@@ -311,7 +315,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                       </div>
                     ) : (
                       <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                        No reservations found for this attraction.
+                        {t("attractionDetails.noReservations")}
                       </div>
                     )}
                   </CardContent>
@@ -321,10 +325,10 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
               <TabsContent value="documents">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Documents</CardTitle>
+                    <CardTitle>{t("common.documents")}</CardTitle>
                     <Button onClick={() => handleOpenDocumentModal()}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Document
+                      {t("attractionDetails.addDocument")}
                     </Button>
                   </CardHeader>
                   <CardContent>
@@ -356,7 +360,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                                   onClick={() => handleOpenDocumentModal(document)}
                                 >
                                   <Edit className="h-3.5 w-3.5 mr-1" />
-                                  Edit
+                                  {t("common.edit")}
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -365,7 +369,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                                   onClick={() => window.open(document.url, "_blank")}
                                 >
                                   <Download className="h-3.5 w-3.5 mr-1" />
-                                  Download
+                                  {t("common.download")}
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -377,7 +381,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                                   }}
                                 >
                                   <Trash className="h-3.5 w-3.5 mr-1" />
-                                  Delete
+                                  {t("common.delete")}
                                 </Button>
                               </div>
                             </div>
@@ -391,7 +395,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                       </div>
                     ) : (
                       <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                        No documents found for this attraction. Click the button above to add one.
+                        {t("attractionDetails.noDocuments")}
                       </div>
                     )}
                   </CardContent>
@@ -401,10 +405,10 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
               <TabsContent value="maintenance">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Maintenance History</CardTitle>
+                    <CardTitle>{t("attractionDetails.maintenanceHistory")}</CardTitle>
                     <Button onClick={() => handleOpenMaintenanceModal()}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Maintenance Record
+                      {t("attractionDetails.addMaintenanceRecord")}
                     </Button>
                   </CardHeader>
                   <CardContent>
@@ -424,7 +428,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                                 <div>
                                   <div className="font-medium">{new Date(record.date).toLocaleDateString()}</div>
                                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    Performed by: {record.performedBy}
+                                    {t("common.performedBy")}: {record.performedBy}
                                   </div>
                                 </div>
                               </div>
@@ -440,7 +444,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                                   <div key={index} className="relative w-16 h-16 rounded-md overflow-hidden">
                                     <Image
                                       src={image || "/placeholder.svg?height=64&width=64&query=maintenance"}
-                                      alt={`Maintenance image ${index + 1}`}
+                                      alt={`${t("common.maintenanceImage")} ${index + 1}`}
                                       fill
                                       className="object-cover"
                                     />
@@ -453,7 +457,7 @@ export default function AttractionDetailPage({ params }: { params: { id: string 
                       </div>
                     ) : (
                       <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                        No maintenance records found for this attraction. Click the button above to add one.
+                        {t("attractionDetails.noMaintenanceRecords")}
                       </div>
                     )}
                   </CardContent>

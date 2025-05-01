@@ -11,8 +11,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { attractions } from "@/lib/mock-data"
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle, Package, User } from "lucide-react"
 import Link from "next/link"
+import { sendConfirmationEmail, generateConfirmationCode } from "@/lib/email-service"
+import { toast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 export default function ClientReservation() {
+  const { t } = useTranslation()
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -28,6 +32,8 @@ export default function ClientReservation() {
     notes: "",
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [confirmationCode, setConfirmationCode] = useState("")
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -62,11 +68,62 @@ export default function ClientReservation() {
     if (step > 1) setStep(step - 1)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitted(true)
-    // In a real application, you would send this data to your backend
-    console.log("Form submitted:", formData)
+    setIsSubmitting(true)
+
+    try {
+      // Generate a confirmation code
+      const code = generateConfirmationCode()
+      setConfirmationCode(code)
+
+      // Get selected attraction objects
+      const selectedAttractionObjects = attractions.filter((attraction) =>
+        formData.selectedAttractions.includes(attraction.id),
+      )
+
+      // Format date range for email
+      const startDate = new Date(formData.startDate)
+      const endDate = new Date(formData.endDate)
+      const dateRange =
+        startDate.toLocaleDateString() === endDate.toLocaleDateString()
+          ? startDate.toLocaleDateString()
+          : `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
+
+      // Send confirmation email
+      const emailResult = await sendConfirmationEmail({
+        to: formData.email,
+        subject: "Your BouncyRent Reservation Confirmation",
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        reservationDate: dateRange,
+        attractions: selectedAttractionObjects.map((a) => ({ name: a.name, price: a.price })),
+        totalPrice: selectedAttractionObjects.reduce((sum, a) => sum + a.price, 0),
+        confirmationCode: code,
+      })
+
+      if (emailResult.success) {
+        toast({
+          title: "Confirmation Email Sent",
+          description: "Check your inbox for reservation details.",
+        })
+      }
+
+      // In a real app, you would save the reservation to your database here
+      console.log("Form submitted:", formData)
+
+      // Mark as submitted
+      setIsSubmitted(true)
+    } catch (error) {
+      console.error("Error submitting form:", error)
+      toast({
+        title: "Error",
+        description: "There was a problem submitting your reservation. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const selectedAttractionObjects = attractions.filter((attraction) =>
@@ -88,17 +145,17 @@ export default function ClientReservation() {
               href="/#attractions"
               className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
             >
-              Attractions
+              {t("clientReservation.attractions")}
             </Link>
             <Link
               href="/#how-it-works"
               className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
             >
-              How It Works
+              {t("clientReservation.howItWorks")}
             </Link>
             <Link href="/login">
               <Button variant="outline" className="ml-4">
-                Login
+                {t("clientReservation.login")}
               </Button>
             </Link>
           </nav>
@@ -107,7 +164,9 @@ export default function ClientReservation() {
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">Book Your Bounce House</h1>
+          <h1 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
+            {t("clientReservation.title")}
+          </h1>
 
           {/* Stepper */}
           <div className="mb-10">
@@ -126,7 +185,7 @@ export default function ClientReservation() {
                 >
                   <Calendar className="h-5 w-5" />
                 </div>
-                <span className="text-xs">Date</span>
+                <span className="text-xs">{t("clientReservation.step1")}</span>
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <div
@@ -149,7 +208,7 @@ export default function ClientReservation() {
                 >
                   <Package className="h-5 w-5" />
                 </div>
-                <span className="text-xs">Attractions</span>
+                <span className="text-xs">{t("clientReservation.step2")}</span>
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <div
@@ -172,7 +231,7 @@ export default function ClientReservation() {
                 >
                   <User className="h-5 w-5" />
                 </div>
-                <span className="text-xs">Your Info</span>
+                <span className="text-xs">{t("clientReservation.step3")}</span>
               </div>
               <div className="flex-1 flex items-center justify-center">
                 <div
@@ -195,7 +254,7 @@ export default function ClientReservation() {
                 >
                   <CheckCircle className="h-5 w-5" />
                 </div>
-                <span className="text-xs">Confirm</span>
+                <span className="text-xs">{t("clientReservation.step4")}</span>
               </div>
             </div>
           </div>
@@ -207,10 +266,10 @@ export default function ClientReservation() {
                   {/* Step 1: Date Selection */}
                   {step === 1 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">Select Your Dates</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.selectDates")}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="startDate">Start Date</Label>
+                          <Label htmlFor="startDate">{t("clientReservation.startDate")}</Label>
                           <Input
                             id="startDate"
                             name="startDate"
@@ -222,7 +281,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="endDate">End Date</Label>
+                          <Label htmlFor="endDate">{t("clientReservation.endDate")}</Label>
                           <Input
                             id="endDate"
                             name="endDate"
@@ -235,14 +294,11 @@ export default function ClientReservation() {
                         </div>
                       </div>
                       <div className="pt-4">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Please select the date(s) you would like to rent our attractions. For single-day events,
-                          select the same date for both start and end dates.
-                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t("clientReservation.dateHelp")}</p>
                       </div>
                       <div className="flex justify-end pt-4">
                         <Button type="button" onClick={nextStep} disabled={!formData.startDate || !formData.endDate}>
-                          Next
+                          {t("clientReservation.next")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
@@ -252,7 +308,7 @@ export default function ClientReservation() {
                   {/* Step 2: Attraction Selection */}
                   {step === 2 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">Select Attractions</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.selectAttractions")}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {attractions.map((attraction) => (
                           <div
@@ -268,8 +324,8 @@ export default function ClientReservation() {
                               <div className="flex-shrink-0 mr-4">
                                 <img
                                   src={
-                                    attraction.imageUrl ||
-                                    `/placeholder.svg?height=80&width=80&query=Inflatable ${attraction.name}`
+                                    attraction.image ||
+                                    `/placeholder.svg?height=80&width=80&query=Inflatable ${attraction.name || "/placeholder.svg"}`
                                   }
                                   alt={attraction.name}
                                   className="w-20 h-20 object-cover rounded-md"
@@ -279,7 +335,7 @@ export default function ClientReservation() {
                                 <h3 className="font-medium">{attraction.name}</h3>
                                 <p className="text-orange-500 font-bold">${attraction.price}</p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                                  {attraction.description}
+                                  {attraction.description || `${attraction.width}x${attraction.height} bounce house`}
                                 </p>
                               </div>
                               {formData.selectedAttractions.includes(attraction.id) && (
@@ -294,10 +350,10 @@ export default function ClientReservation() {
                       <div className="flex justify-between pt-4">
                         <Button type="button" variant="outline" onClick={prevStep}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
-                          Back
+                          {t("clientReservation.back")}
                         </Button>
                         <Button type="button" onClick={nextStep} disabled={formData.selectedAttractions.length === 0}>
-                          Next
+                          {t("clientReservation.next")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
@@ -307,10 +363,10 @@ export default function ClientReservation() {
                   {/* Step 3: Contact Information */}
                   {step === 3 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">Your Information</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.yourInformation")}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="firstName">First Name</Label>
+                          <Label htmlFor="firstName">{t("clientReservation.firstName")}</Label>
                           <Input
                             id="firstName"
                             name="firstName"
@@ -321,7 +377,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="lastName">Last Name</Label>
+                          <Label htmlFor="lastName">{t("clientReservation.lastName")}</Label>
                           <Input
                             id="lastName"
                             name="lastName"
@@ -332,7 +388,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
+                          <Label htmlFor="email">{t("clientReservation.email")}</Label>
                           <Input
                             id="email"
                             name="email"
@@ -344,7 +400,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Phone</Label>
+                          <Label htmlFor="phone">{t("clientReservation.phone")}</Label>
                           <Input
                             id="phone"
                             name="phone"
@@ -355,7 +411,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="address">Address</Label>
+                          <Label htmlFor="address">{t("clientReservation.address")}</Label>
                           <Input
                             id="address"
                             name="address"
@@ -366,7 +422,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="city">City</Label>
+                          <Label htmlFor="city">{t("clientReservation.city")}</Label>
                           <Input
                             id="city"
                             name="city"
@@ -377,7 +433,7 @@ export default function ClientReservation() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="postalCode">Postal Code</Label>
+                          <Label htmlFor="postalCode">{t("clientReservation.postalCode")}</Label>
                           <Input
                             id="postalCode"
                             name="postalCode"
@@ -389,11 +445,11 @@ export default function ClientReservation() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="notes">Additional Notes</Label>
+                        <Label htmlFor="notes">{t("clientReservation.additionalNotes")}</Label>
                         <Textarea
                           id="notes"
                           name="notes"
-                          placeholder="Any special requests or information we should know..."
+                          placeholder={t("clientReservation.notesPlaceholder")}
                           value={formData.notes}
                           onChange={handleInputChange}
                           className="min-h-[100px]"
@@ -402,14 +458,14 @@ export default function ClientReservation() {
                       <div className="flex justify-between pt-4">
                         <Button type="button" variant="outline" onClick={prevStep}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
-                          Back
+                          {t("clientReservation.back")}
                         </Button>
                         <Button
                           type="button"
                           onClick={nextStep}
                           disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone}
                         >
-                          Next
+                          {t("clientReservation.next")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </div>
@@ -419,21 +475,21 @@ export default function ClientReservation() {
                   {/* Step 4: Confirmation */}
                   {step === 4 && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold mb-4">Confirm Your Reservation</h2>
+                      <h2 className="text-xl font-semibold mb-4">{t("clientReservation.confirmReservation")}</h2>
 
                       <div className="space-y-4">
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">Rental Dates</h3>
+                          <h3 className="font-medium mb-2">{t("clientReservation.rentalDates")}</h3>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>Start Date:</div>
+                            <div>{t("clientReservation.startDate")}:</div>
                             <div>{formData.startDate}</div>
-                            <div>End Date:</div>
+                            <div>{t("clientReservation.endDate")}:</div>
                             <div>{formData.endDate}</div>
                           </div>
                         </div>
 
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">Selected Attractions</h3>
+                          <h3 className="font-medium mb-2">{t("clientReservation.selectedAttractions")}</h3>
                           <div className="space-y-2">
                             {selectedAttractionObjects.map((attraction) => (
                               <div key={attraction.id} className="flex justify-between">
@@ -442,24 +498,24 @@ export default function ClientReservation() {
                               </div>
                             ))}
                             <div className="border-t pt-2 mt-2 font-bold flex justify-between">
-                              <span>Total:</span>
+                              <span>{t("clientReservation.total")}:</span>
                               <span>${totalPrice}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">Your Information</h3>
+                          <h3 className="font-medium mb-2">{t("clientReservation.yourInfo")}</h3>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>Name:</div>
+                            <div>{t("clientReservation.name")}:</div>
                             <div>
                               {formData.firstName} {formData.lastName}
                             </div>
-                            <div>Email:</div>
+                            <div>{t("clientReservation.email")}:</div>
                             <div>{formData.email}</div>
-                            <div>Phone:</div>
+                            <div>{t("clientReservation.phone")}:</div>
                             <div>{formData.phone}</div>
-                            <div>Address:</div>
+                            <div>{t("clientReservation.address")}:</div>
                             <div>
                               {formData.address}, {formData.city}, {formData.postalCode}
                             </div>
@@ -468,15 +524,14 @@ export default function ClientReservation() {
 
                         {formData.notes && (
                           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                            <h3 className="font-medium mb-2">Additional Notes</h3>
+                            <h3 className="font-medium mb-2">{t("clientReservation.notes")}</h3>
                             <p className="text-sm">{formData.notes}</p>
                           </div>
                         )}
 
                         <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
                           <p className="text-sm">
-                            <strong>Note:</strong> We will contact you regarding payment options after reviewing your
-                            reservation request.
+                            <strong>{t("common.note")}:</strong> {t("clientReservation.paymentNote")}
                           </p>
                         </div>
                       </div>
@@ -484,9 +539,13 @@ export default function ClientReservation() {
                       <div className="flex justify-between pt-4">
                         <Button type="button" variant="outline" onClick={prevStep}>
                           <ArrowLeft className="mr-2 h-4 w-4" />
-                          Back
+                          {t("clientReservation.back")}
                         </Button>
-                        <Button type="submit">Complete Reservation</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                          {isSubmitting
+                            ? t("clientReservation.submitting")
+                            : t("clientReservation.completeReservation")}
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -496,43 +555,51 @@ export default function ClientReservation() {
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 mb-4">
                     <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">Reservation Submitted!</h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Thank you for your reservation request. We will review your request and contact you shortly
-                    regarding payment options and to confirm your booking.
-                  </p>
+                  <h2 className="text-2xl font-bold mb-2">{t("clientReservation.reservationSubmitted")}</h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">{t("clientReservation.thankYou")}</p>
+
+                  <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800 mb-6">
+                    <p className="font-medium mb-2">
+                      {t("clientReservation.confirmationCode")}{" "}
+                      <span className="text-orange-600 dark:text-orange-400">{confirmationCode}</span>
+                    </p>
+                    <p className="text-sm">
+                      {t("clientReservation.emailSent")} {formData.email}
+                    </p>
+                  </div>
+
                   <div className="space-y-4">
-                    <p className="font-medium">What happens next?</p>
+                    <p className="font-medium">{t("clientReservation.whatNext")}</p>
                     <ol className="text-left space-y-2 text-gray-600 dark:text-gray-400">
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           1
                         </span>
-                        <span>Our team will review your reservation request</span>
+                        <span>{t("clientReservation.step1Next")}</span>
                       </li>
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           2
                         </span>
-                        <span>We'll contact you to discuss payment options and confirm details</span>
+                        <span>{t("clientReservation.step2Next")}</span>
                       </li>
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           3
                         </span>
-                        <span>Once payment is received, your reservation will be confirmed</span>
+                        <span>{t("clientReservation.step3Next")}</span>
                       </li>
                       <li className="flex items-start">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 mr-2 flex-shrink-0">
                           4
                         </span>
-                        <span>We'll deliver and set up your attractions on the scheduled date</span>
+                        <span>{t("clientReservation.step4Next")}</span>
                       </li>
                     </ol>
                   </div>
                   <div className="mt-8">
                     <Link href="/">
-                      <Button variant="outline">Return to Home</Button>
+                      <Button variant="outline">{t("clientReservation.returnHome")}</Button>
                     </Link>
                   </div>
                 </div>

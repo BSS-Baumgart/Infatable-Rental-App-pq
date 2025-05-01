@@ -12,6 +12,7 @@ import type { Reservation, ReservationStatus } from "@/lib/types"
 import ReservationWizard from "@/components/modals/reservation-wizard"
 import InvoiceModal from "@/components/modals/invoice-modal"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 const statusColors: Record<ReservationStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -21,6 +22,7 @@ const statusColors: Record<ReservationStatus, string> = {
 }
 
 export default function ReservationsPage() {
+  const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "all">("all")
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations)
@@ -72,8 +74,8 @@ export default function ReservationsPage() {
         prev.map((res) => (res.id === currentReservation.id ? ({ ...res, ...data } as Reservation) : res)),
       )
       toast({
-        title: "Reservation updated",
-        description: `Reservation #${currentReservation.id} has been updated successfully.`,
+        title: t("reservations.updated"),
+        description: t("reservations.updateSuccess", { id: currentReservation.id }),
       })
     } else {
       // Create new reservation
@@ -90,8 +92,8 @@ export default function ReservationsPage() {
 
       setReservations((prev) => [...prev, newReservation])
       toast({
-        title: "Reservation created",
-        description: `New reservation has been created successfully.`,
+        title: t("reservations.created"),
+        description: t("reservations.createSuccess"),
       })
     }
     handleCloseReservationModal()
@@ -99,18 +101,18 @@ export default function ReservationsPage() {
 
   const handleSaveInvoice = (data: any) => {
     toast({
-      title: "Invoice created",
-      description: `Invoice for reservation #${currentReservation?.id} has been created successfully.`,
+      title: t("invoices.created"),
+      description: t("invoices.createSuccess", { id: currentReservation?.id }),
     })
     handleCloseInvoiceModal()
   }
 
   const handleDeleteReservation = (id: string) => {
-    if (confirm("Are you sure you want to delete this reservation?")) {
+    if (confirm(t("reservations.confirmDelete"))) {
       setReservations((prev) => prev.filter((res) => res.id !== id))
       toast({
-        title: "Reservation deleted",
-        description: `Reservation #${id} has been deleted.`,
+        title: t("reservations.deleted"),
+        description: t("reservations.deleteSuccess", { id }),
       })
     }
   }
@@ -123,13 +125,13 @@ export default function ReservationsPage() {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-2xl font-bold">Reservations</h1>
+          <h1 className="text-2xl font-bold">{t("reservations.title")}</h1>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
               <input
                 type="text"
-                placeholder="Search reservations..."
+                placeholder={t("reservations.search")}
                 className="pl-8 h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-[#0F0F12] dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -137,7 +139,7 @@ export default function ReservationsPage() {
             </div>
             <Button onClick={() => handleOpenReservationModal()}>
               <Plus className="h-4 w-4 mr-2" />
-              New Reservation
+              {t("reservations.new")}
             </Button>
           </div>
         </div>
@@ -148,54 +150,54 @@ export default function ReservationsPage() {
             size="sm"
             onClick={() => setStatusFilter("all")}
           >
-            All
+            {t("reservations.allStatuses")}
           </Button>
           <Button
             variant={statusFilter === "pending" ? "default" : "outline"}
             size="sm"
             onClick={() => setStatusFilter("pending")}
           >
-            Pending
+            {t("reservations.status.pending")}
           </Button>
           <Button
             variant={statusFilter === "in-progress" ? "default" : "outline"}
             size="sm"
             onClick={() => setStatusFilter("in-progress")}
           >
-            In Progress
+            {t("reservations.status.in-progress")}
           </Button>
           <Button
             variant={statusFilter === "completed" ? "default" : "outline"}
             size="sm"
             onClick={() => setStatusFilter("completed")}
           >
-            Completed
+            {t("reservations.status.completed")}
           </Button>
           <Button
             variant={statusFilter === "cancelled" ? "default" : "outline"}
             size="sm"
             onClick={() => setStatusFilter("cancelled")}
           >
-            Cancelled
+            {t("reservations.status.cancelled")}
           </Button>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>All Reservations</CardTitle>
+            <CardTitle>{t("reservations.title")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-800">
-                    <th className="text-left font-medium p-2">ID</th>
-                    <th className="text-left font-medium p-2">Client</th>
-                    <th className="text-left font-medium p-2">Date</th>
-                    <th className="text-left font-medium p-2">Attractions</th>
-                    <th className="text-left font-medium p-2">Price</th>
-                    <th className="text-left font-medium p-2">Status</th>
-                    <th className="text-right font-medium p-2">Actions</th>
+                    <th className="text-left font-medium p-2">{t("common.id")}</th>
+                    <th className="text-left font-medium p-2">{t("reservations.client")}</th>
+                    <th className="text-left font-medium p-2">{t("reservations.date")}</th>
+                    <th className="text-left font-medium p-2">{t("reservations.attraction")}</th>
+                    <th className="text-left font-medium p-2">{t("reservations.price")}</th>
+                    <th className="text-left font-medium p-2">{t("reservations.status")}</th>
+                    <th className="text-right font-medium p-2">{t("common.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -209,7 +211,7 @@ export default function ReservationsPage() {
                       <td className="p-2">
                         {reservation.client
                           ? `${reservation.client.firstName} ${reservation.client.lastName}`
-                          : "No client"}
+                          : t("reservations.unknownClient")}
                       </td>
                       <td className="p-2">
                         {new Date(reservation.startDate).toLocaleDateString()} -{" "}
@@ -219,7 +221,7 @@ export default function ReservationsPage() {
                       <td className="p-2">${reservation.totalPrice}</td>
                       <td className="p-2">
                         <Badge className={statusColors[reservation.status]}>
-                          {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1).replace("-", " ")}
+                          {t(`reservations.status.${reservation.status}`)}
                         </Badge>
                       </td>
                       <td className="p-2 text-right">

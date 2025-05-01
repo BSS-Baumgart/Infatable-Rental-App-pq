@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { reservations } from "@/lib/mock-data"
 import type { Invoice, InvoiceStatus } from "@/lib/types"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 interface InvoiceModalProps {
   isOpen: boolean
@@ -20,6 +21,7 @@ interface InvoiceModalProps {
 }
 
 export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, onSave }: InvoiceModalProps) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState<Partial<Invoice>>({
     reservationId: "",
     issueDate: new Date(),
@@ -90,19 +92,19 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{invoice ? "Edit Invoice" : "New Invoice"}</DialogTitle>
+          <DialogTitle>{invoice ? t("invoices.edit") : t("invoices.new")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           {/* Reservation Selection */}
           <div className="grid w-full items-center gap-2">
-            <Label htmlFor="reservationId">Reservation</Label>
+            <Label htmlFor="reservationId">{t("invoices.reservation")}</Label>
             <Select
               value={formData.reservationId}
               onValueChange={(value) => handleSelectChange("reservationId", value)}
               disabled={!!reservationId}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a reservation" />
+                <SelectValue placeholder={t("invoices.selectReservation")} />
               </SelectTrigger>
               <SelectContent>
                 {reservations.map((res) => (
@@ -117,7 +119,7 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="grid w-full items-center gap-2">
-              <Label htmlFor="issueDate">Issue Date</Label>
+              <Label htmlFor="issueDate">{t("invoices.issueDate")}</Label>
               <Input
                 type="date"
                 id="issueDate"
@@ -127,7 +129,7 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
               />
             </div>
             <div className="grid w-full items-center gap-2">
-              <Label htmlFor="dueDate">Due Date</Label>
+              <Label htmlFor="dueDate">{t("invoices.dueDate")}</Label>
               <Input
                 type="date"
                 id="dueDate"
@@ -140,7 +142,7 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
 
           {/* Amount */}
           <div className="grid w-full items-center gap-2">
-            <Label htmlFor="amount">Amount ($)</Label>
+            <Label htmlFor="amount">{t("invoices.amount")} ($)</Label>
             <Input
               type="number"
               id="amount"
@@ -155,24 +157,26 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
 
           {/* Status */}
           <div className="grid w-full items-center gap-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">{t("invoices.status")}</Label>
             <Select
               value={formData.status}
               onValueChange={(value) => handleSelectChange("status", value as InvoiceStatus)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder={t("invoices.selectStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="unpaid">Unpaid</SelectItem>
+                <SelectItem value="paid">{t("invoices.status.paid")}</SelectItem>
+                <SelectItem value="unpaid">{t("invoices.status.unpaid")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* PDF URL */}
           <div className="grid w-full items-center gap-2">
-            <Label htmlFor="pdfUrl">PDF URL (Optional)</Label>
+            <Label htmlFor="pdfUrl">
+              {t("invoices.pdfUrl")} ({t("invoices.optional")})
+            </Label>
             <Input
               type="text"
               id="pdfUrl"
@@ -185,9 +189,9 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("common.save")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

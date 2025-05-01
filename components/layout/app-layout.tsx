@@ -1,35 +1,58 @@
 "use client"
 
-import { type ReactNode, useState, useEffect } from "react"
-import { AppSidebar } from "./app-sidebar"
-import { TopNav } from "./top-nav"
-import { useTheme } from "next-themes"
+import type React from "react"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import AppSidebar from "./app-sidebar"
+import TopNav from "./top-nav"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { useAuth } from "@/lib/auth-context"
+import { Toaster } from "@/components/ui/toaster"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 interface AppLayoutProps {
-  children: ReactNode
+  children: React.ReactNode
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { t } = useTranslation()
+  const isMobile = useIsMobile()
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Redirect to login if not authenticated
+    if (!isLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, isLoading, router])
 
-  if (!mounted) {
-    return null
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-blue-600 border-b-blue-600 border-l-gray-200 border-r-gray-200 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg">{t("common.loading")}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Will redirect to login
   }
 
   return (
-    <div className={`flex h-screen ${theme === "dark" ? "dark" : ""}`}>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0A0C]">
       <AppSidebar />
-      <div className="w-full flex flex-1 flex-col">
-        <header className="h-16 border-b border-gray-200 dark:border-[#1F1F23]">
-          <TopNav />
-        </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6 bg-white dark:bg-[#0F0F12]">{children}</main>
+      <div
+        className={`flex flex-col ${isMobile ? "ml-0" : "ml-64"} min-h-screen transition-all duration-300 ease-in-out`}
+      >
+        <TopNav />
+        <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
+      <Toaster />
     </div>
   )
 }

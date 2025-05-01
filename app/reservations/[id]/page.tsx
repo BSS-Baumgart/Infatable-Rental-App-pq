@@ -13,8 +13,10 @@ import type { Reservation } from "@/lib/types"
 import ReservationWizard from "@/components/modals/reservation-wizard"
 import InvoiceModal from "@/components/modals/invoice-modal"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n/translation-context"
 
 export default function ReservationDetailPage({ params }: { params: { id: string } }) {
+  const { t } = useTranslation()
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false)
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
@@ -52,16 +54,16 @@ export default function ReservationDetailPage({ params }: { params: { id: string
     // Update the reservation
     setReservation((prev) => (prev ? ({ ...prev, ...data } as Reservation) : null))
     toast({
-      title: "Reservation updated",
-      description: `Reservation #${params.id} has been updated successfully.`,
+      title: t("reservations.updated"),
+      description: t("reservations.updateSuccess", { id: params.id }),
     })
     handleCloseReservationModal()
   }
 
   const handleSaveInvoice = () => {
     toast({
-      title: "Invoice created",
-      description: `Invoice for reservation #${params.id} has been created successfully.`,
+      title: t("invoices.created"),
+      description: t("invoices.createSuccess", { id: params.id }),
     })
     handleCloseInvoiceModal()
   }
@@ -70,10 +72,10 @@ export default function ReservationDetailPage({ params }: { params: { id: string
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center h-[60vh]">
-          <h1 className="text-2xl font-bold mb-4">Reservation not found</h1>
+          <h1 className="text-2xl font-bold mb-4">{t("common.notFound", { item: t("common.reservation") })}</h1>
           <Button onClick={() => router.push("/reservations")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Reservations
+            {t("common.backTo", { page: t("reservations.title") })}
           </Button>
         </div>
       </AppLayout>
@@ -87,9 +89,11 @@ export default function ReservationDetailPage({ params }: { params: { id: string
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => router.push("/reservations")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              {t("common.back")}
             </Button>
-            <h1 className="text-2xl font-bold">Reservation #{reservation.id}</h1>
+            <h1 className="text-2xl font-bold">
+              {t("reservations.reservation")} #{reservation.id}
+            </h1>
             <Badge
               className={
                 reservation.status === "pending"
@@ -101,17 +105,17 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
               }
             >
-              {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1).replace("-", " ")}
+              {t(`reservations.status.${reservation.status}`)}
             </Badge>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleOpenInvoiceModal}>
               <FileText className="mr-2 h-4 w-4" />
-              Create Invoice
+              {t("reservations.createInvoice")}
             </Button>
             <Button onClick={() => setIsEditModalOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit Reservation
+              {t("reservations.edit")}
             </Button>
           </div>
         </div>
@@ -120,34 +124,34 @@ export default function ReservationDetailPage({ params }: { params: { id: string
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle>Client Information</CardTitle>
+                <CardTitle>{t("reservations.clientInformation")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Name:</span>
+                    <span className="font-medium">{t("common.name")}:</span>
                     <span>
-                      {reservation.client?.firstName} {reservation.client?.lastName || "Unknown Client"}
+                      {reservation.client?.firstName} {reservation.client?.lastName || t("reservations.unknownClient")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Phone:</span>
-                    <span>{reservation.client?.phone || "N/A"}</span>
+                    <span className="font-medium">{t("common.phone")}:</span>
+                    <span>{reservation.client?.phone || t("common.notAvailable")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Email:</span>
-                    <span>{reservation.client?.email || "N/A"}</span>
+                    <span className="font-medium">{t("common.email")}:</span>
+                    <span>{reservation.client?.email || t("common.notAvailable")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Address:</span>
+                    <span className="font-medium">{t("common.address")}:</span>
                     <span>
                       {reservation.client
                         ? `${reservation.client.street} ${reservation.client.buildingNumber}, ${reservation.client.postalCode} ${reservation.client.city}`
-                        : "N/A"}
+                        : t("common.notAvailable")}
                     </span>
                   </div>
                 </div>
@@ -156,28 +160,28 @@ export default function ReservationDetailPage({ params }: { params: { id: string
 
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Reservation Details</CardTitle>
+                <CardTitle>{t("reservations.details")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Start Date:</span>
+                    <span className="font-medium">{t("reservations.startDate")}:</span>
                     <span>{new Date(reservation.startDate).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">End Date:</span>
+                    <span className="font-medium">{t("reservations.endDate")}:</span>
                     <span>{new Date(reservation.endDate).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="font-medium">Total Price:</span>
+                    <span className="font-medium">{t("reservations.total")}:</span>
                     <span className="text-lg font-bold">${reservation.totalPrice}</span>
                   </div>
                   {reservation.notes && (
                     <div>
-                      <span className="font-medium">Notes:</span>
+                      <span className="font-medium">{t("reservations.notes")}:</span>
                       <p className="mt-1 text-gray-600 dark:text-gray-300">{reservation.notes}</p>
                     </div>
                   )}
@@ -189,15 +193,15 @@ export default function ReservationDetailPage({ params }: { params: { id: string
           <div className="lg:col-span-2">
             <Tabs defaultValue="attractions" className="w-full">
               <TabsList className="mb-4">
-                <TabsTrigger value="attractions">Attractions</TabsTrigger>
-                <TabsTrigger value="invoices">Invoices</TabsTrigger>
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                <TabsTrigger value="attractions">{t("common.attractions")}</TabsTrigger>
+                <TabsTrigger value="invoices">{t("common.invoices")}</TabsTrigger>
+                <TabsTrigger value="timeline">{t("common.timeline")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="attractions">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Reserved Attractions</CardTitle>
+                    <CardTitle>{t("reservations.reservedAttractions")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -220,7 +224,9 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                           </div>
                           <div className="text-right">
                             <div className="font-medium">${item.attraction.price}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">Qty: {item.quantity}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              {t("common.quantity")}: {item.quantity}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -232,11 +238,11 @@ export default function ReservationDetailPage({ params }: { params: { id: string
               <TabsContent value="invoices">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Invoices</CardTitle>
+                    <CardTitle>{t("common.invoices")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                      No invoices found for this reservation.
+                      {t("reservations.noInvoices")}
                     </div>
                   </CardContent>
                 </Card>
@@ -245,7 +251,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
               <TabsContent value="timeline">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Reservation Timeline</CardTitle>
+                    <CardTitle>{t("reservations.timeline")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -257,12 +263,12 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                           <div className="w-0.5 h-full bg-gray-200 dark:bg-gray-800"></div>
                         </div>
                         <div>
-                          <div className="font-medium">Reservation Created</div>
+                          <div className="font-medium">{t("reservations.created")}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
                             {new Date(reservation.createdAt).toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            Reservation was created with {reservation.attractions.length} attraction(s)
+                            {t("reservations.createdWithAttractions", { count: reservation.attractions.length })}
                           </div>
                         </div>
                       </div>
@@ -275,12 +281,12 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                           <div className="w-0.5 h-full bg-gray-200 dark:bg-gray-800"></div>
                         </div>
                         <div>
-                          <div className="font-medium">Reservation Updated</div>
+                          <div className="font-medium">{t("reservations.updated")}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
                             {new Date(reservation.updatedAt).toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            Reservation details were updated
+                            {t("reservations.detailsUpdated")}
                           </div>
                         </div>
                       </div>
@@ -292,10 +298,14 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                           </div>
                         </div>
                         <div>
-                          <div className="font-medium">Reservation {reservation.status}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">Pending</div>
+                          <div className="font-medium">
+                            {t("reservations.statusIs", { status: t(`reservations.status.${reservation.status}`) })}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {t(`reservations.status.${reservation.status}`)}
+                          </div>
                           <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            Waiting for the reservation date
+                            {t("reservations.waitingForDate")}
                           </div>
                         </div>
                       </div>

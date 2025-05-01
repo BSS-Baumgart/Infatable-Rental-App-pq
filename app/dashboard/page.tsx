@@ -25,6 +25,8 @@ import {
 } from "recharts"
 import ReservationWizard from "@/components/modals/reservation-wizard"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n/translation-context"
+import { NotificationDemo } from "@/components/notifications/notification-demo"
 
 const statusColors: Record<ReservationStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -39,6 +41,7 @@ type TimeFilter = "week" | "month" | "year" | "all"
 type GroupBy = "week" | "month"
 
 export default function DashboardPage() {
+  const { t } = useTranslation()
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("month")
   const [groupBy, setGroupBy] = useState<GroupBy>("week")
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -83,7 +86,7 @@ export default function DashboardPage() {
         const firstDayOfYear = new Date(date.getFullYear(), 0, 1)
         const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000
         const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
-        key = `Week ${weekNumber}`
+        key = `${t("calendar.week")} ${weekNumber}`
       } else {
         // Get month name
         key = date.toLocaleString("default", { month: "short" })
@@ -94,7 +97,7 @@ export default function DashboardPage() {
 
     // Convert to array format for Recharts
     return Object.entries(data).map(([name, value]) => ({ name, value }))
-  }, [filteredReservations, groupBy])
+  }, [filteredReservations, groupBy, t])
 
   // Prepare data for the pie chart
   const pieChartData = useMemo(() => {
@@ -111,10 +114,10 @@ export default function DashboardPage() {
 
     // Convert to array format for Recharts
     return Object.entries(statusCounts).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1).replace("-", " "),
+      name: t(`reservations.status.${name}`) || name.charAt(0).toUpperCase() + name.slice(1).replace("-", " "),
       value,
     }))
-  }, [filteredReservations])
+  }, [filteredReservations, t])
 
   // Calculate total revenue for filtered reservations
   const totalRevenue = useMemo(() => {
@@ -133,8 +136,8 @@ export default function DashboardPage() {
 
   const handleSaveReservation = (data: Partial<Reservation>) => {
     toast({
-      title: "Reservation updated",
-      description: `Reservation #${currentReservation?.id} has been updated successfully.`,
+      title: t("reservations.updated"),
+      description: t("reservations.updateSuccess", { id: currentReservation?.id }),
     })
     handleCloseModal()
   }
@@ -143,33 +146,33 @@ export default function DashboardPage() {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span className="text-sm font-medium">Time Period:</span>
+              <span className="text-sm font-medium">{t("dashboard.timePeriod")}:</span>
               <Select value={timeFilter} onValueChange={(value) => setTimeFilter(value as TimeFilter)}>
                 <SelectTrigger className="h-8 w-[120px]">
-                  <SelectValue placeholder="Filter" />
+                  <SelectValue placeholder={t("common.filter")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="week">Last Week</SelectItem>
-                  <SelectItem value="month">Last Month</SelectItem>
-                  <SelectItem value="year">Last Year</SelectItem>
-                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="week">{t("reports.presetRanges.last7Days")}</SelectItem>
+                  <SelectItem value="month">{t("reports.presetRanges.last30Days")}</SelectItem>
+                  <SelectItem value="year">{t("reports.presetRanges.lastYear")}</SelectItem>
+                  <SelectItem value="all">{t("common.all")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span className="text-sm font-medium">Group By:</span>
+              <span className="text-sm font-medium">{t("dashboard.groupBy")}:</span>
               <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
                 <SelectTrigger className="h-8 w-[120px]">
-                  <SelectValue placeholder="Group By" />
+                  <SelectValue placeholder={t("dashboard.groupBy")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
+                  <SelectItem value="week">{t("calendar.week")}</SelectItem>
+                  <SelectItem value="month">{t("calendar.month")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -180,48 +183,49 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Reservations</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("dashboard.reservations")}</CardTitle>
               <BarChart2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{filteredReservations.length}</div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {filteredReservations.filter((r) => r.status === "pending").length} pending
+                {filteredReservations.filter((r) => r.status === "pending").length}{" "}
+                {t("reservations.status.pending").toLowerCase()}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("dashboard.clients")}</CardTitle>
               <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboardStats.totalClients}</div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Active customer base</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t("dashboard.activeCustomers")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Attractions</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("dashboard.totalAttractions")}</CardTitle>
               <Package className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboardStats.totalAttractions}</div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Available for rent</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t("dashboard.availableForRent")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("dashboard.revenue")}</CardTitle>
               <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${totalRevenue}</div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {timeFilter === "all" ? "All time" : `Last ${timeFilter}`}
+                {timeFilter === "all" ? t("common.all") : t(`reports.presetRanges.last${timeFilter}`)}
               </p>
             </CardContent>
           </Card>
@@ -232,7 +236,7 @@ export default function DashboardPage() {
           {/* Bar Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Reservations by {groupBy === "week" ? "Week" : "Month"}</CardTitle>
+              <CardTitle>{t("dashboard.reservationsByPeriod", { period: t(`calendar.${groupBy}`) })}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-80">
@@ -250,7 +254,7 @@ export default function DashboardPage() {
                     <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#ec4899" name="Reservations" />
+                    <Bar dataKey="value" fill="#ec4899" name={t("dashboard.reservations")} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -260,7 +264,7 @@ export default function DashboardPage() {
           {/* Pie Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Reservation Status Distribution</CardTitle>
+              <CardTitle>{t("dashboard.reservationStatusDistribution")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-80">
@@ -292,9 +296,9 @@ export default function DashboardPage() {
         {/* Recent Reservations */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Recent Reservations</CardTitle>
+            <CardTitle>{t("dashboard.recentReservations")}</CardTitle>
             <Button variant="outline" size="sm" onClick={() => router.push("/reservations")}>
-              View All
+              {t("dashboard.viewAll")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -308,21 +312,22 @@ export default function DashboardPage() {
                 >
                   <div>
                     <div className="font-medium">
-                      {reservation.client?.firstName} {reservation.client?.lastName || "Unknown Client"}
+                      {reservation.client?.firstName} {reservation.client?.lastName || t("reservations.unknownClient")}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                       {new Date(reservation.startDate).toLocaleDateString()} -{" "}
                       {new Date(reservation.endDate).toLocaleDateString()}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {reservation.attractions.length} attraction(s)
+                      {reservation.attractions.length} {t("reservations.attraction").toLowerCase()}(s)
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className="font-medium">${reservation.totalPrice}</div>
                       <Badge className={statusColors[reservation.status]}>
-                        {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1).replace("-", " ")}
+                        {t(`reservations.status.${reservation.status}`) ||
+                          reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1).replace("-", " ")}
                       </Badge>
                     </div>
                   </div>
@@ -331,7 +336,7 @@ export default function DashboardPage() {
 
               {filteredReservations.length === 0 && (
                 <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                  No reservations found for the selected time period.
+                  {t("dashboard.noReservationsForPeriod")}
                 </div>
               )}
             </div>
@@ -341,9 +346,9 @@ export default function DashboardPage() {
         {/* Popular Attractions */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Popular Attractions</CardTitle>
+            <CardTitle>{t("attractions.popularAttractions")}</CardTitle>
             <Button variant="outline" size="sm" onClick={() => router.push("/attractions")}>
-              View All
+              {t("attractions.viewAll")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -360,13 +365,19 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <div className="font-medium">{attraction.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Booked {count} times</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {t("attractions.bookedTimes", { count })}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-8">
+        <NotificationDemo />
       </div>
 
       <ReservationWizard
