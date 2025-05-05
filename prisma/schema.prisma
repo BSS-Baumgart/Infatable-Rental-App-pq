@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum UserRole {
+  admin
+  employee
+  manager
+  viewer
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  passwordHash  String
+  role      UserRole
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  target    String?
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id             String   @id @default(uuid())
+  firstName      String
+  lastName       String
+  phone          String
+  email          String?
+  street         String
+  buildingNumber String
+  postalCode     String
+  city           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Attraction {
+  id                  String              @id @default(uuid())
+  name                String
+  width               Float
+  height              Float
+  length              Float
+  weight              Float
+  price               Float
+  setupTime           Int
+  image               String?
+  maintenanceRecords  MaintenanceRecord[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+}
+
+model MaintenanceRecord {
+  id           String   @id @default(uuid())
+  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  attractionId String
+  date         DateTime
+  description  String
+  cost         Float
+  performedBy  String
+  imagesJson   String?
+  createdAt    DateTime @default(now())
+}
+
