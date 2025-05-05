@@ -21,6 +21,9 @@ const statusColors: Record<ReservationStatus, string> = {
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
 }
 
+// Mockowany aktualny użytkownik - w rzeczywistej aplikacji będzie pobierany z kontekstu uwierzytelniania
+const currentUser = { id: "user-1", role: "admin" }
+
 export default function ReservationsPage() {
   const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState("")
@@ -32,7 +35,7 @@ export default function ReservationsPage() {
   const { toast } = useToast()
   const router = useRouter()
 
-  // Filter reservations based on search term and status
+  // Filter reservations based on search term, status, and user assignment
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch =
       reservation.client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,7 +44,11 @@ export default function ReservationsPage() {
 
     const matchesStatus = statusFilter === "all" || reservation.status === statusFilter
 
-    return matchesSearch && matchesStatus
+    // Admin widzi wszystkie rezerwacje, inni użytkownicy tylko te, do których są przypisani
+    const isAssignedOrAdmin =
+      currentUser.role === "admin" || (reservation.assignedUsers && reservation.assignedUsers.includes(currentUser.id))
+
+    return matchesSearch && matchesStatus && isAssignedOrAdmin
   })
 
   const handleOpenReservationModal = (reservation?: Reservation) => {
@@ -82,10 +89,17 @@ export default function ReservationsPage() {
       // Make sure we have the client object from the clients array
       const clientObj = data.clientId ? clients.find((c) => c.id === data.clientId) : null
 
+      // Ensure current user is assigned to the reservation if not already
+      const assignedUsers = data.assignedUsers || []
+      if (!assignedUsers.includes(currentUser.id)) {
+        assignedUsers.push(currentUser.id)
+      }
+
       const newReservation = {
         ...data,
         id: `RES-${Math.floor(Math.random() * 10000)}`,
         client: clientObj, // Ensure client object is included
+        assignedUsers, // Add assigned users
         createdAt: new Date(),
         updatedAt: new Date(),
       } as Reservation

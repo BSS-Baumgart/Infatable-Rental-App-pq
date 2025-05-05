@@ -58,6 +58,7 @@ export interface Reservation {
   notes?: string
   createdAt: Date
   updatedAt: Date
+  assignedUsers: string[] // Dodane pole - tablica ID użytkowników przypisanych do rezerwacji
 }
 
 export interface Invoice {

@@ -66,6 +66,10 @@ export const reservationsTranslations: TranslationRecord = {
     "reservations.deleteSuccess": "Reservation #{id} has been deleted.",
     "reservations.filterByStatus": "Filter by Status",
     "reservations.allStatuses": "All Statuses",
+    "reservations.assignedUsers": "Assigned Users",
+    "reservations.selectUsers": "Select Users",
+    "reservations.assignedUsersHelp": "Selected users will have access to this reservation",
+    "reservations.noAssignedUsers": "No assigned users",
   },
   pl: {
     "reservations.title": "Rezerwacje",
@@ -132,5 +136,9 @@ export const reservationsTranslations: TranslationRecord = {
     "reservations.deleteSuccess": "Rezerwacja #{id} została usunięta.",
     "reservations.filterByStatus": "Filtruj według statusu",
     "reservations.allStatuses": "Wszystkie statusy",
+    "reservations.assignedUsers": "Przypisani użytkownicy",
+    "reservations.selectUsers": "Wybierz użytkowników",
+    "reservations.assignedUsersHelp": "Wybrani użytkownicy będą mieli dostęp do tej rezerwacji",
+    "reservations.noAssignedUsers": "Brak przypisanych użytkowników",
   },
 }

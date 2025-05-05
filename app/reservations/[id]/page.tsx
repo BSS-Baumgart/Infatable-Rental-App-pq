@@ -196,6 +196,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                 <TabsTrigger value="attractions">{t("common.attractions")}</TabsTrigger>
                 <TabsTrigger value="invoices">{t("common.invoices")}</TabsTrigger>
                 <TabsTrigger value="timeline">{t("common.timeline")}</TabsTrigger>
+                <TabsTrigger value="users">{t("common.assignedUsers")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="attractions">
@@ -310,6 +311,47 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                         </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="users">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("reservations.assignedUsers")}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {reservation.assignedUsers && reservation.assignedUsers.length > 0 ? (
+                      <div className="space-y-4">
+                        {reservation.assignedUsers.map((userId) => {
+                          // W rzeczywistej aplikacji, pobierz dane użytkownika z API
+                          const user = {
+                            id: userId,
+                            name: `User ${userId}`,
+                            email: "user@example.com",
+                            role: "employee",
+                          }
+                          return (
+                            <div key={userId} className="flex items-center justify-between p-3 border rounded-md">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                  <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                                </div>
+                                <div>
+                                  <div className="font-medium">{user.name}</div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                                </div>
+                              </div>
+                              <Badge>{user.role}</Badge>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                        {t("reservations.noAssignedUsers")}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

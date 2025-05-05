@@ -27,6 +27,9 @@ interface ReservationWizardProps {
 
 const statusOptions: ReservationStatus[] = ["pending", "in-progress", "completed", "cancelled"]
 
+// Mockowany aktualny użytkownik - w rzeczywistej aplikacji będzie pobierany z kontekstu uwierzytelniania
+const currentUser = { id: "user-1", role: "admin" }
+
 export default function ReservationWizard({
   isOpen,
   onClose,
@@ -46,6 +49,7 @@ export default function ReservationWizard({
     endDate: new Date(),
     totalPrice: 0,
     notes: "",
+    assignedUsers: [currentUser.id], // Automatycznie przypisz aktualnego użytkownika
   })
   const [selectedAttractionId, setSelectedAttractionId] = useState<string>("")
   const router = useRouter()
@@ -62,6 +66,7 @@ export default function ReservationWizard({
         endDate: new Date(reservation.endDate),
         totalPrice: reservation.totalPrice,
         notes: reservation.notes || "",
+        assignedUsers: reservation.assignedUsers || [], // Zachowaj przypisanych użytkowników przy edycji
       })
     } else {
       // Reset form for new reservation
@@ -73,6 +78,7 @@ export default function ReservationWizard({
         endDate: initialDate || new Date(),
         totalPrice: 0,
         notes: "",
+        assignedUsers: [currentUser.id], // Automatycznie przypisz aktualnego użytkownika przy tworzeniu nowej rezerwacji
       })
     }
     setStep(1)

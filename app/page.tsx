@@ -311,6 +311,16 @@ export default function LandingPage() {
                     {t("nav.bookNow")}
                   </Link>
                 </li>
+                <li>
+                  <Link href="/terms" className="text-gray-400 hover:text-orange-400">
+                    {t("landing.footer.terms")}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="text-gray-400 hover:text-orange-400">
+                    {t("landing.footer.privacy")}
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>

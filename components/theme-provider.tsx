@@ -63,7 +63,9 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 
   return (
     <ThemeContext.Provider value={{ themeOptions, setThemeOptions }}>
-      <NextThemesProvider {...props}>{children}</NextThemesProvider>
+      <NextThemesProvider defaultTheme="light" {...props}>
+        {children}
+      </NextThemesProvider>
     </ThemeContext.Provider>
   )
 }

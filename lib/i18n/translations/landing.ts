@@ -30,6 +30,8 @@ export const landingTranslations: TranslationRecord = {
     "landing.footer.description":
       "Your one-stop shop for bounce house rentals. Making events unforgettable since 2023.",
     "landing.footer.quickLinks": "Quick Links",
+    "landing.footer.terms": "Terms",
+    "landing.footer.privacy": "Privacy Policy",
   },
   pl: {
     "landing.hero.title": "Uczyń Swoje Wydarzenie Niezapomnianym",
@@ -58,8 +60,9 @@ export const landingTranslations: TranslationRecord = {
     "landing.testimonials.3.text":
       "Łatwa rezerwacja online, świetna komunikacja, a dmuchany zamek był czysty i w idealnym stanie. Dziękujemy!",
     "landing.testimonials.3.author": "Emilia Dąbrowska",
-    "landing.footer.description":
-      "Twój kompleksowy sklep z dmuchanymi zamkami. Sprawiamy, że wydarzenia są niezapomniane od 2023 roku.",
-    "landing.footer.quickLinks": "Szybkie Linki",
+    "landing.footer.description": "Wypożyczalnia dmuchańców i atrakcji na imprezy dla dzieci i dorosłych.",
+    "landing.footer.quickLinks": "Szybkie linki",
+    "landing.footer.terms": "Regulamin",
+    "landing.footer.privacy": "Polityka prywatności",
   },
 }

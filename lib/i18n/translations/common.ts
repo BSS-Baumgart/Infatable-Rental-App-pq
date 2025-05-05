@@ -80,6 +80,7 @@ export const commonTranslations: TranslationRecord = {
     "common.note": "Note",
     "common.fillAllFields": "Please fill in all required fields",
     "common.selectDate": "Select date",
+    "common.assignedUsers": "Assigned users",
 
     // Reservation specific
     "common.selectDates": "Select Dates",
@@ -264,6 +265,7 @@ export const commonTranslations: TranslationRecord = {
     "common.note": "Uwaga",
     "common.fillAllFields": "Proszę wypełnić wszystkie wymagane pola",
     "common.selectDate": "Wybierz datę",
+    "common.assignedUsers": "Przypisani użytkownicy",
 
     // Reservation specific
     "common.selectDates": "Wybierz daty",
