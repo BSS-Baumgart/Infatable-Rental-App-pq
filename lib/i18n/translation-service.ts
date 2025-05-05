@@ -13,6 +13,7 @@ import { notificationsTranslations } from "./translations/notifications"
 import { landingTranslations } from "./translations/landing"
 import { authTranslations } from "./translations/auth"
 import type { Language } from "./translation-context"
+import { sidebarTranslations } from "./translations/sidebar"
 
 // Default translations
 export const translations = {
@@ -30,6 +31,7 @@ export const translations = {
   notifications: notificationsTranslations,
   landing: landingTranslations,
   auth: authTranslations,
+  sidebar: sidebarTranslations, // Dodaj tłumaczenia dla sidebar
   // Dodaj tutaj nowe tłumaczenia
 }
 

@@ -180,6 +180,17 @@ CREATE TABLE maintenance_images (
 );
 \`\`\`
 
+#### Settings
+\`\`\`sql
+CREATE TABLE settings (
+  id UUID PRIMARY KEY,
+  key VARCHAR(100) NOT NULL UNIQUE,
+  value TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+\`\`\`
+
 ## API Endpoints
 
 ### Authentication
@@ -290,6 +301,14 @@ CREATE TABLE maintenance_images (
 | GET | `/api/public/attractions` | Get public attraction information |
 | POST | `/api/public/reservations` | Submit a reservation request |
 | GET | `/api/public/reservation/:confirmationCode` | Check reservation status |
+
+### Settings
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/settings/branding` | Get branding settings (logo, favicon) |
+| POST | `/api/settings/branding/logo` | Upload and update company logo |
+| POST | `/api/settings/branding/favicon` | Upload and update favicon |
 
 ## Frontend Integration
 
@@ -516,6 +535,63 @@ export async function sendConfirmationEmail(params: {
     method: 'POST',
     body: JSON.stringify(params),
   });
+}
+\`\`\`
+
+### 7. Branding and Settings Service
+
+Create a service for managing branding and application settings:
+
+\`\`\`typescript
+// services/settings-service.ts
+import { apiRequest } from '../lib/api-client';
+
+export async function getBrandingSettings(): Promise<{ logoUrl: string; faviconUrl: string }> {
+  return apiRequest<{ logoUrl: string; faviconUrl: string }>('/settings/branding');
+}
+
+export async function uploadLogo(file: File): Promise<{ logoUrl: string }> {
+  const formData = new FormData();
+  formData.append('logo', file);
+  
+  const token = localStorage.getItem("auth_token");
+  
+  const response = await fetch('/api/settings/branding/logo', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+    throw new Error(error.message || 'Failed to upload logo');
+  }
+  
+  return response.json();
+}
+
+export async function uploadFavicon(file: File): Promise<{ faviconUrl: string }> {
+  const formData = new FormData();
+  formData.append('favicon', file);
+  
+  const token = localStorage.getItem("auth_token");
+  
+  const response = await fetch('/api/settings/branding/favicon', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+    throw new Error(error.message || 'Failed to upload favicon');
+  }
+  
+  return response.json();
 }
 \`\`\`
 

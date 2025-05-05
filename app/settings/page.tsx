@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef } from "react"
 import { useTheme } from "next-themes"
 import AppLayout from "@/components/layout/app-layout"
@@ -10,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { users } from "@/lib/mock-data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Settings, Users, Palette, Bell, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react"
+import { Settings, Users, Palette, Bell, ChevronLeft, ChevronRight, ShieldCheck, ImageIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import UserManagement from "@/components/settings/user-management"
@@ -27,6 +29,8 @@ export default function SettingsPage() {
   const { toast } = useToast()
   const { theme, setTheme } = useTheme()
   const { themeOptions, setThemeOptions } = useThemeContext()
+  const [logoUrl, setLogoUrl] = useState("/bouncy-castle.png") // Domyślne logo
+  const [logoFile, setLogoFile] = useState<File | null>(null)
 
   const handleSaveAppearance = () => {
     toast({
@@ -85,6 +89,34 @@ export default function SettingsPage() {
     }
   }
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setLogoFile(file)
+      setLogoUrl(URL.createObjectURL(file))
+    }
+  }
+
+  const handleSaveLogo = async () => {
+    if (!logoFile) return
+
+    try {
+      // W rzeczywistej implementacji tutaj byłby kod do przesłania pliku na serwer
+      // np. za pomocą API lub bezpośrednio do usługi przechowywania plików
+
+      toast({
+        title: t("settings.logoUpdated"),
+        description: t("settings.logoUpdateSuccess"),
+      })
+    } catch (error) {
+      toast({
+        title: t("common.error"),
+        description: t("settings.logoUpdateError"),
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -112,6 +144,10 @@ export default function SettingsPage() {
                 </TabsTrigger>
                 {isAdmin && (
                   <>
+                    <TabsTrigger value="branding" className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      <span>{t("settings.branding")}</span>
+                    </TabsTrigger>
                     <TabsTrigger value="users" className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       <span>{t("settings.users")}</span>
@@ -347,6 +383,85 @@ export default function SettingsPage() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {isAdmin && (
+                <TabsContent value="branding">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t("settings.brandingSettings")}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-medium">{t("settings.companyLogo")}</h3>
+                          <div className="flex flex-col space-y-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="h-24 w-24 rounded-md border border-gray-200 dark:border-gray-800 overflow-hidden flex items-center justify-center bg-white">
+                                <img
+                                  src={logoUrl || "/placeholder.svg"}
+                                  alt="Company Logo"
+                                  className="max-h-full max-w-full object-contain"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="logo-upload" className="font-medium">
+                                  {t("settings.uploadLogo")}
+                                </Label>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  {t("settings.logoRequirements")}
+                                </p>
+                                <Input
+                                  id="logo-upload"
+                                  type="file"
+                                  accept="image/png, image/jpeg, image/svg+xml"
+                                  onChange={handleLogoChange}
+                                  className="max-w-xs"
+                                />
+                              </div>
+                            </div>
+                            <Button
+                              onClick={handleSaveLogo}
+                              disabled={!logoFile}
+                              style={{ backgroundColor: "var(--accent-color)" }}
+                            >
+                              {t("settings.saveLogo")}
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-medium">{t("settings.favicon")}</h3>
+                          <div className="flex items-center space-x-4">
+                            <div className="h-12 w-12 rounded-md border border-gray-200 dark:border-gray-800 overflow-hidden flex items-center justify-center bg-white">
+                              <img src="/favicon.ico" alt="Favicon" className="max-h-full max-w-full object-contain" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="favicon-upload" className="font-medium">
+                                {t("settings.uploadFavicon")}
+                              </Label>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {t("settings.faviconRequirements")}
+                              </p>
+                              <Input
+                                id="favicon-upload"
+                                type="file"
+                                accept="image/png, image/x-icon"
+                                className="max-w-xs"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                          <Button style={{ backgroundColor: "var(--accent-color)" }}>
+                            {t("settings.saveBrandingSettings")}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
 
               {isAdmin && (
                 <TabsContent value="users">
