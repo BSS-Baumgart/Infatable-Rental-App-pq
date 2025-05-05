@@ -196,6 +196,28 @@ export const settingsTranslations: TranslationRecord = {
     "settings.permissionsSavedDescription": "Component visibility permissions have been updated successfully.",
     "settings.actionPermissionsByRole": "Action Permissions by Role",
     "settings.module": "Module",
+
+    // Dodaj nowe tłumaczenia dla brandingu
+    branding: "Branding",
+    brandingSettings: "Branding Settings",
+    companyLogo: "Company Logo",
+    uploadLogo: "Upload Logo",
+    logoRequirements: "Recommended size: 200x200px, PNG or SVG format",
+    saveLogo: "Save Logo",
+    logoUpdated: "Logo Updated",
+    logoUpdateSuccess: "Company logo has been updated successfully",
+    logoUpdateError: "Failed to update company logo",
+    favicon: "Favicon",
+    uploadFavicon: "Upload Favicon",
+    faviconRequirements: "Recommended size: 32x32px, PNG or ICO format",
+    saveBrandingSettings: "Save Branding Settings",
+
+    // Dodaj tłumaczenia dla grup menu
+    groups: {
+      main: "Main",
+      resources: "Resources",
+      system: "System",
+    },
   },
   pl: {
     "settings.title": "Ustawienia",
@@ -393,5 +415,27 @@ export const settingsTranslations: TranslationRecord = {
     "settings.permissionsSavedDescription": "Uprawnienia widoczności komponentów zostały pomyślnie zaktualizowane.",
     "settings.actionPermissionsByRole": "Uprawnienia do akcji według roli",
     "settings.module": "Moduł",
+
+    // Dodaj nowe tłumaczenia dla brandingu
+    branding: "Branding",
+    brandingSettings: "Ustawienia brandingu",
+    companyLogo: "Logo firmy",
+    uploadLogo: "Prześlij logo",
+    logoRequirements: "Zalecany rozmiar: 200x200px, format PNG lub SVG",
+    saveLogo: "Zapisz logo",
+    logoUpdated: "Logo zaktualizowane",
+    logoUpdateSuccess: "Logo firmy zostało pomyślnie zaktualizowane",
+    logoUpdateError: "Nie udało się zaktualizować logo firmy",
+    favicon: "Favicon",
+    uploadFavicon: "Prześlij Favicon",
+    faviconRequirements: "Zalecany rozmiar: 32x32px, format PNG lub ICO",
+    saveBrandingSettings: "Zapisz ustawienia brandingu",
+
+    // Dodaj tłumaczenia dla grup menu
+    groups: {
+      main: "Główny",
+      resources: "Zasoby",
+      system: "System",
+    },
   },
 }

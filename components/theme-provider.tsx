@@ -4,10 +4,11 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import type { ThemeProviderProps } from "next-themes"
 
-export interface ThemeOptions {
+interface ThemeOptions {
   accentColor: "orange" | "blue" | "green" | "purple"
   compactMode: boolean
   collapsedSidebar: boolean
+  logoUrl?: string
 }
 
 type ThemeContextType = {
@@ -17,12 +18,15 @@ type ThemeContextType = {
 
 export const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined)
 
+const defaultThemeOptions: ThemeOptions = {
+  accentColor: "orange",
+  compactMode: false,
+  collapsedSidebar: false,
+  logoUrl: "/bouncy-castle.png",
+}
+
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const [themeOptions, setThemeOptions] = React.useState<ThemeOptions>({
-    accentColor: "orange",
-    compactMode: false,
-    collapsedSidebar: false,
-  })
+  const [themeOptions, setThemeOptions] = React.useState<ThemeOptions>(defaultThemeOptions)
 
   // Load theme options from localStorage on mount
   React.useEffect(() => {
