@@ -1,14 +1,27 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import AppLayout from "@/components/layout/app-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { documents as initialDocuments } from "@/lib/mock-data"
-import { Button } from "@/components/ui/button"
-import { Download, File, FileText, Filter, Grid, ImageIcon, List, Plus, Search, Trash, Upload, X } from "lucide-react"
-import type { Document, DocumentRelationType } from "@/lib/types"
-import DocumentModal from "@/components/modals/document-modal"
-import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react";
+import AppLayout from "@/components/layout/app-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { documents as initialDocuments } from "@/lib/mock-data";
+import { Button } from "@/components/ui/button";
+import {
+  Download,
+  File,
+  FileText,
+  Filter,
+  Grid,
+  ImageIcon,
+  List,
+  Plus,
+  Search,
+  Trash,
+  Upload,
+  X,
+} from "lucide-react";
+import type { Document, DocumentRelationType } from "@/app/types/types";
+import DocumentModal from "@/components/modals/document-modal";
+import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,68 +31,81 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { useTranslation } from "@/lib/i18n/translation-context"
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/lib/i18n/translation-context";
 
 const documentTypeIcons: Record<string, any> = {
   "application/pdf": FileText,
   "image/jpeg": ImageIcon,
   "image/png": ImageIcon,
   default: File,
-}
+};
 
 export default function DocumentsPage() {
-  const { t } = useTranslation()
-  const [documents, setDocuments] = useState<Document[]>(initialDocuments)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [currentDocument, setCurrentDocument] = useState<Document | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
-  const [filterType, setFilterType] = useState<string | null>(null)
-  const { toast } = useToast()
+  const { t } = useTranslation();
+  const [documents, setDocuments] = useState<Document[]>(initialDocuments);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentDocument, setCurrentDocument] = useState<Document | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(
+    null
+  );
+  const [filterType, setFilterType] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Get all unique document types
-  const documentTypes = Array.from(new Set(documents.map((doc) => doc.type.split("/")[1])))
+  const documentTypes = Array.from(
+    new Set(documents.map((doc) => doc.type.split("/")[1]))
+  );
 
   // Filter documents based on search term and type filter
   const filteredDocuments = documents.filter((document) => {
-    const matchesSearch = document.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType ? document.type.includes(filterType) : true
-    return matchesSearch && matchesType
-  })
+    const matchesSearch = document.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesType = filterType ? document.type.includes(filterType) : true;
+    return matchesSearch && matchesType;
+  });
 
   // Get icon for document type
   const getDocumentIcon = (type: string) => {
-    const IconComponent = documentTypeIcons[type] || documentTypeIcons.default
-    return <IconComponent className="h-4 w-4" />
-  }
+    const IconComponent = documentTypeIcons[type] || documentTypeIcons.default;
+    return <IconComponent className="h-4 w-4" />;
+  };
 
   // Format file size
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B"
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
-    else return (bytes / (1024 * 1024)).toFixed(1) + " MB"
-  }
+    if (bytes < 1024) return bytes + " B";
+    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    else return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
 
   // Get related type label
   const getRelatedTypeLabel = (type: DocumentRelationType): string => {
-    return t(`documents.related.${type}`)
-  }
+    return t(`documents.related.${type}`);
+  };
 
   // Handle document save
   const handleSaveDocument = (data: Partial<Document>) => {
     if (currentDocument) {
       // Update existing document
-      const updatedDocuments = documents.map((doc) => (doc.id === currentDocument.id ? { ...doc, ...data } : doc))
-      setDocuments(updatedDocuments)
+      const updatedDocuments = documents.map((doc) =>
+        doc.id === currentDocument.id ? { ...doc, ...data } : doc
+      );
+      setDocuments(updatedDocuments);
       toast({
         title: t("documents.updated"),
         description: `${data.name} ${t("documents.updated.success")}`,
-      })
+      });
     } else {
       // Add new document
       const newDocument: Document = {
@@ -90,30 +116,34 @@ export default function DocumentsPage() {
         url: data.url || "",
         uploadedAt: new Date(),
         relatedTo: data.relatedTo,
-      }
-      setDocuments([newDocument, ...documents])
+      };
+      setDocuments([newDocument, ...documents]);
       toast({
         title: t("documents.uploaded"),
         description: `${newDocument.name} ${t("documents.uploaded.success")}`,
-      })
+      });
     }
-    setIsModalOpen(false)
-    setCurrentDocument(null)
-  }
+    setIsModalOpen(false);
+    setCurrentDocument(null);
+  };
 
   // Handle document delete
   const handleDeleteDocument = () => {
     if (documentToDelete) {
-      const updatedDocuments = documents.filter((doc) => doc.id !== documentToDelete.id)
-      setDocuments(updatedDocuments)
+      const updatedDocuments = documents.filter(
+        (doc) => doc.id !== documentToDelete.id
+      );
+      setDocuments(updatedDocuments);
       toast({
         title: t("documents.deleted"),
-        description: `${documentToDelete.name} ${t("documents.deleted.success")}`,
-      })
-      setDeleteDialogOpen(false)
-      setDocumentToDelete(null)
+        description: `${documentToDelete.name} ${t(
+          "documents.deleted.success"
+        )}`,
+      });
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
     }
-  }
+  };
 
   // Handle document download
   const handleDownloadDocument = (document: Document) => {
@@ -122,14 +152,14 @@ export default function DocumentsPage() {
     toast({
       title: t("documents.download.started"),
       description: `${document.name} ${t("documents.download.progress")}`,
-    })
-  }
+    });
+  };
 
   // Open delete confirmation dialog
   const confirmDelete = (document: Document) => {
-    setDocumentToDelete(document)
-    setDeleteDialogOpen(true)
-  }
+    setDocumentToDelete(document);
+    setDeleteDialogOpen(true);
+  };
 
   return (
     <AppLayout>
@@ -150,15 +180,21 @@ export default function DocumentsPage() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
                   <Filter className="h-4 w-4" />
-                  {filterType ? `${t("documents.filter")}: ${filterType}` : t("documents.filter")}
+                  {filterType
+                    ? `${t("documents.filter")}: ${filterType}`
+                    : t("documents.filter")}
                   {filterType && (
                     <X
                       className="h-3 w-3 ml-1 hover:text-red-500"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        setFilterType(null)
+                        e.stopPropagation();
+                        setFilterType(null);
                       }}
                     />
                   )}
@@ -166,7 +202,10 @@ export default function DocumentsPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {documentTypes.map((type) => (
-                  <DropdownMenuItem key={type} onClick={() => setFilterType(type)}>
+                  <DropdownMenuItem
+                    key={type}
+                    onClick={() => setFilterType(type)}
+                  >
                     {type.toUpperCase()}
                   </DropdownMenuItem>
                 ))}
@@ -177,7 +216,9 @@ export default function DocumentsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={viewMode === "grid" ? "bg-gray-100 dark:bg-gray-800" : ""}
+                className={
+                  viewMode === "grid" ? "bg-gray-100 dark:bg-gray-800" : ""
+                }
                 onClick={() => setViewMode("grid")}
               >
                 <Grid className="h-4 w-4" />
@@ -185,7 +226,9 @@ export default function DocumentsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={viewMode === "list" ? "bg-gray-100 dark:bg-gray-800" : ""}
+                className={
+                  viewMode === "list" ? "bg-gray-100 dark:bg-gray-800" : ""
+                }
                 onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
@@ -194,8 +237,8 @@ export default function DocumentsPage() {
 
             <Button
               onClick={() => {
-                setCurrentDocument(null)
-                setIsModalOpen(true)
+                setCurrentDocument(null);
+                setIsModalOpen(true);
               }}
             >
               <Upload className="h-4 w-4 mr-2" />
@@ -213,7 +256,10 @@ export default function DocumentsPage() {
               {filterType && (
                 <Badge variant="outline" className="ml-2">
                   {t("documents.filter.by")}: {filterType}
-                  <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setFilterType(null)} />
+                  <X
+                    className="h-3 w-3 ml-1 cursor-pointer"
+                    onClick={() => setFilterType(null)}
+                  />
                 </Badge>
               )}
             </CardTitle>
@@ -222,16 +268,20 @@ export default function DocumentsPage() {
             {filteredDocuments.length === 0 ? (
               <div className="text-center py-8">
                 <File className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                <h3 className="text-lg font-medium">{t("documents.no.found")}</h3>
+                <h3 className="text-lg font-medium">
+                  {t("documents.no.found")}
+                </h3>
                 <p className="text-gray-500 dark:text-gray-400 mt-1">
-                  {searchTerm || filterType ? t("documents.adjust.search") : t("documents.upload.first")}
+                  {searchTerm || filterType
+                    ? t("documents.adjust.search")
+                    : t("documents.upload.first")}
                 </p>
                 {!searchTerm && !filterType && (
                   <Button
                     className="mt-4"
                     onClick={() => {
-                      setCurrentDocument(null)
-                      setIsModalOpen(true)
+                      setCurrentDocument(null);
+                      setIsModalOpen(true);
                     }}
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -250,16 +300,22 @@ export default function DocumentsPage() {
                       {getDocumentIcon(document.type)}
                     </div>
                     <div className="space-y-2">
-                      <div className="font-medium truncate" title={document.name}>
+                      <div
+                        className="font-medium truncate"
+                        title={document.name}
+                      >
                         {document.name}
                       </div>
                       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span>{formatFileSize(document.size)}</span>
-                        <span>{new Date(document.uploadedAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(document.uploadedAt).toLocaleDateString()}
+                        </span>
                       </div>
                       {document.relatedTo && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {getRelatedTypeLabel(document.relatedTo.type)}: {document.relatedTo.id}
+                          {getRelatedTypeLabel(document.relatedTo.type)}:{" "}
+                          {document.relatedTo.id}
                         </div>
                       )}
                       <div className="flex gap-2 pt-2">
@@ -290,12 +346,24 @@ export default function DocumentsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-800">
-                      <th className="text-left font-medium p-2">{t("documents.name")}</th>
-                      <th className="text-left font-medium p-2">{t("documents.type")}</th>
-                      <th className="text-left font-medium p-2">{t("documents.size")}</th>
-                      <th className="text-left font-medium p-2">{t("documents.uploaded")}</th>
-                      <th className="text-left font-medium p-2">{t("documents.related.to")}</th>
-                      <th className="text-right font-medium p-2">{t("documents.actions")}</th>
+                      <th className="text-left font-medium p-2">
+                        {t("documents.name")}
+                      </th>
+                      <th className="text-left font-medium p-2">
+                        {t("documents.type")}
+                      </th>
+                      <th className="text-left font-medium p-2">
+                        {t("documents.size")}
+                      </th>
+                      <th className="text-left font-medium p-2">
+                        {t("documents.uploaded")}
+                      </th>
+                      <th className="text-left font-medium p-2">
+                        {t("documents.related.to")}
+                      </th>
+                      <th className="text-right font-medium p-2">
+                        {t("documents.actions")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -314,27 +382,36 @@ export default function DocumentsPage() {
                         </td>
                         <td className="p-2">{document.type.split("/")[1]}</td>
                         <td className="p-2">{formatFileSize(document.size)}</td>
-                        <td className="p-2">{new Date(document.uploadedAt).toLocaleDateString()}</td>
+                        <td className="p-2">
+                          {new Date(document.uploadedAt).toLocaleDateString()}
+                        </td>
                         <td className="p-2">
                           {document.relatedTo ? (
                             <span>
-                              {getRelatedTypeLabel(document.relatedTo.type)}: {document.relatedTo.id}
+                              {getRelatedTypeLabel(document.relatedTo.type)}:{" "}
+                              {document.relatedTo.id}
                             </span>
                           ) : (
-                            <span className="text-gray-500 dark:text-gray-400">{t("documents.none")}</span>
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {t("documents.none")}
+                            </span>
                           )}
                         </td>
                         <td className="p-2 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(document)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(document)}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                setCurrentDocument(document)
-                                setIsModalOpen(true)
+                                setCurrentDocument(document);
+                                setIsModalOpen(true);
                               }}
                             >
                               <FileText className="h-4 w-4" />
@@ -363,8 +440,8 @@ export default function DocumentsPage() {
       <DocumentModal
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false)
-          setCurrentDocument(null)
+          setIsModalOpen(false);
+          setCurrentDocument(null);
         }}
         document={currentDocument}
         relatedType="attraction"
@@ -378,17 +455,23 @@ export default function DocumentsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("documents.delete.confirm")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("documents.delete.warning").replace("{name}", documentToDelete?.name || "")}
+              {t("documents.delete.warning").replace(
+                "{name}",
+                documentToDelete?.name || ""
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("documents.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteDocument} className="bg-red-500 hover:bg-red-600 text-white">
+            <AlertDialogAction
+              onClick={handleDeleteDocument}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
               {t("documents.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </AppLayout>
-  )
+  );
 }

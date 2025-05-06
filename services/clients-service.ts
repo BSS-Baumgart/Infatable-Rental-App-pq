@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/api-client";
-import type { Client } from "@/lib/types";
+import type { Client } from "@/app/types/types";
 
 export async function getClients(): Promise<Client[]> {
   return apiRequest("/clients");

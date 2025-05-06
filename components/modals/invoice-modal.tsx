@@ -1,34 +1,52 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { reservations } from "@/lib/mock-data"
-import type { Invoice, InvoiceStatus } from "@/lib/types"
-import { useTranslation } from "@/lib/i18n/translation-context"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { reservations } from "@/lib/mock-data";
+import type { Invoice, InvoiceStatus } from "@/app/types/types";
+import { useTranslation } from "@/lib/i18n/translation-context";
 
 interface InvoiceModalProps {
-  isOpen: boolean
-  onClose: () => void
-  invoice?: Invoice | null
-  reservationId?: string
-  onSave: (invoice: Partial<Invoice>) => void
+  isOpen: boolean;
+  onClose: () => void;
+  invoice?: Invoice | null;
+  reservationId?: string;
+  onSave: (invoice: Partial<Invoice>) => void;
 }
 
-export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, onSave }: InvoiceModalProps) {
-  const { t } = useTranslation()
+export default function InvoiceModal({
+  isOpen,
+  onClose,
+  invoice,
+  reservationId,
+  onSave,
+}: InvoiceModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<Invoice>>({
     reservationId: "",
     issueDate: new Date(),
     dueDate: new Date(new Date().setDate(new Date().getDate() + 14)), // Default due date is 14 days from now
     amount: 0,
     status: "unpaid",
-  })
+  });
 
   // Initialize form with invoice data if editing
   useEffect(() => {
@@ -41,10 +59,10 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
         amount: invoice.amount,
         status: invoice.status,
         pdfUrl: invoice.pdfUrl || "",
-      })
+      });
     } else if (reservationId) {
       // If creating a new invoice for a specific reservation
-      const reservation = reservations.find((r) => r.id === reservationId)
+      const reservation = reservations.find((r) => r.id === reservationId);
       if (reservation) {
         setFormData({
           reservationId: reservation.id,
@@ -53,7 +71,7 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
           dueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
           amount: reservation.totalPrice,
           status: "unpaid",
-        })
+        });
       }
     } else {
       // Reset form for new invoice
@@ -63,36 +81,38 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
         dueDate: new Date(new Date().setDate(new Date().getDate() + 14)),
         amount: 0,
         status: "unpaid",
-      })
+      });
     }
-  }, [invoice, reservationId, isOpen])
+  }, [invoice, reservationId, isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target
+    const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "number" ? Number.parseFloat(value) || 0 : value,
-    }))
-  }
+    }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleDateChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: new Date(value) }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: new Date(value) }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData)
-  }
+    e.preventDefault();
+    onSave(formData);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{invoice ? t("invoices.edit") : t("invoices.new")}</DialogTitle>
+          <DialogTitle>
+            {invoice ? t("invoices.edit") : t("invoices.new")}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           {/* Reservation Selection */}
@@ -100,7 +120,9 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
             <Label htmlFor="reservationId">{t("invoices.reservation")}</Label>
             <Select
               value={formData.reservationId}
-              onValueChange={(value) => handleSelectChange("reservationId", value)}
+              onValueChange={(value) =>
+                handleSelectChange("reservationId", value)
+              }
               disabled={!!reservationId}
             >
               <SelectTrigger>
@@ -109,7 +131,8 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
               <SelectContent>
                 {reservations.map((res) => (
                   <SelectItem key={res.id} value={res.id}>
-                    {res.id} - {res.client.firstName} {res.client.lastName} (${res.totalPrice})
+                    {res.id} - {res.client.firstName} {res.client.lastName} ($
+                    {res.totalPrice})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -124,7 +147,11 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
                 type="date"
                 id="issueDate"
                 name="issueDate"
-                value={formData.issueDate ? new Date(formData.issueDate).toISOString().split("T")[0] : ""}
+                value={
+                  formData.issueDate
+                    ? new Date(formData.issueDate).toISOString().split("T")[0]
+                    : ""
+                }
                 onChange={(e) => handleDateChange("issueDate", e.target.value)}
               />
             </div>
@@ -134,7 +161,11 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
                 type="date"
                 id="dueDate"
                 name="dueDate"
-                value={formData.dueDate ? new Date(formData.dueDate).toISOString().split("T")[0] : ""}
+                value={
+                  formData.dueDate
+                    ? new Date(formData.dueDate).toISOString().split("T")[0]
+                    : ""
+                }
                 onChange={(e) => handleDateChange("dueDate", e.target.value)}
               />
             </div>
@@ -160,14 +191,20 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
             <Label htmlFor="status">{t("invoices.status")}</Label>
             <Select
               value={formData.status}
-              onValueChange={(value) => handleSelectChange("status", value as InvoiceStatus)}
+              onValueChange={(value) =>
+                handleSelectChange("status", value as InvoiceStatus)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder={t("invoices.selectStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="paid">{t("invoices.status.paid")}</SelectItem>
-                <SelectItem value="unpaid">{t("invoices.status.unpaid")}</SelectItem>
+                <SelectItem value="paid">
+                  {t("invoices.status.paid")}
+                </SelectItem>
+                <SelectItem value="unpaid">
+                  {t("invoices.status.unpaid")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -196,5 +233,5 @@ export default function InvoiceModal({ isOpen, onClose, invoice, reservationId, 
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

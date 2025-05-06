@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import type { UserRole } from "@/lib/types";
+import type { UserRole } from "@/app/types/types";
 
 let initialized = false;
 

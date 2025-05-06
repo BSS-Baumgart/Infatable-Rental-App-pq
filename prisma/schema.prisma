@@ -62,6 +62,7 @@ model Client {
 model Attraction {
   id                  String              @id @default(uuid())
   name                String
+  description         String?
   width               Float
   height              Float
   length              Float

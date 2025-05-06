@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Plus, Search, Trash, User } from "lucide-react";
 import ClientModal from "@/components/modals/client-modal";
 import { useToast } from "@/components/ui/use-toast";
-import type { Client } from "@/lib/types";
+import type { Client } from "@/app/types/types";
 import { useTranslation } from "@/lib/i18n/translation-context";
 
 export default function ClientsPage() {
@@ -36,7 +36,6 @@ export default function ClientsPage() {
       });
   }, []);
 
-  // Filter clients based on search term
   const filteredClients = clients.filter(
     (client) =>
       client.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||

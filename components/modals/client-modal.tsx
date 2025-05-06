@@ -1,24 +1,35 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import type { Client } from "@/lib/types"
-import { useTranslation } from "@/lib/i18n/translation-context"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import type { Client } from "@/app/types/types";
+import { useTranslation } from "@/lib/i18n/translation-context";
 
 interface ClientModalProps {
-  isOpen: boolean
-  onClose: () => void
-  client?: Client | null
-  onSave: (client: Partial<Client>) => void
+  isOpen: boolean;
+  onClose: () => void;
+  client?: Client | null;
+  onSave: (client: Partial<Client>) => void;
 }
 
-export default function ClientModal({ isOpen, onClose, client, onSave }: ClientModalProps) {
-  const { t } = useTranslation()
+export default function ClientModal({
+  isOpen,
+  onClose,
+  client,
+  onSave,
+}: ClientModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<Client>>({
     firstName: "",
     lastName: "",
@@ -28,7 +39,7 @@ export default function ClientModal({ isOpen, onClose, client, onSave }: ClientM
     buildingNumber: "",
     postalCode: "",
     city: "",
-  })
+  });
 
   // Initialize form with client data if editing
   useEffect(() => {
@@ -43,7 +54,7 @@ export default function ClientModal({ isOpen, onClose, client, onSave }: ClientM
         buildingNumber: client.buildingNumber,
         postalCode: client.postalCode,
         city: client.city,
-      })
+      });
     } else {
       // Reset form for new client
       setFormData({
@@ -55,25 +66,27 @@ export default function ClientModal({ isOpen, onClose, client, onSave }: ClientM
         buildingNumber: "",
         postalCode: "",
         city: "",
-      })
+      });
     }
-  }, [client, isOpen])
+  }, [client, isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData)
-  }
+    e.preventDefault();
+    onSave(formData);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{client ? t("clients.edit") : t("clients.new")}</DialogTitle>
+          <DialogTitle>
+            {client ? t("clients.edit") : t("clients.new")}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           {/* Personal Information */}
@@ -106,7 +119,14 @@ export default function ClientModal({ isOpen, onClose, client, onSave }: ClientM
           <div className="grid grid-cols-2 gap-4">
             <div className="grid w-full items-center gap-2">
               <Label htmlFor="phone">{t("clients.phone")}</Label>
-              <Input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required />
+              <Input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             <div className="grid w-full items-center gap-2">
               <Label htmlFor="email">{t("clients.email")}</Label>
@@ -135,7 +155,9 @@ export default function ClientModal({ isOpen, onClose, client, onSave }: ClientM
               />
             </div>
             <div className="grid w-full items-center gap-2">
-              <Label htmlFor="buildingNumber">{t("clients.buildingNumber")}</Label>
+              <Label htmlFor="buildingNumber">
+                {t("clients.buildingNumber")}
+              </Label>
               <Input
                 type="text"
                 id="buildingNumber"
@@ -161,7 +183,14 @@ export default function ClientModal({ isOpen, onClose, client, onSave }: ClientM
             </div>
             <div className="grid w-full items-center gap-2">
               <Label htmlFor="city">{t("clients.city")}</Label>
-              <Input type="text" id="city" name="city" value={formData.city} onChange={handleInputChange} required />
+              <Input
+                type="text"
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
 
@@ -174,5 +203,5 @@ export default function ClientModal({ isOpen, onClose, client, onSave }: ClientM
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
