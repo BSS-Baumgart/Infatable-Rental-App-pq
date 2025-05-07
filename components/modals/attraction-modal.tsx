@@ -1,25 +1,36 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import type { Attraction } from "@/lib/types"
-import { useTranslation } from "@/lib/i18n/translation-context"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import type { Attraction } from "@/app/types/types";
+import { useTranslation } from "@/lib/i18n/translation-context";
 
 interface AttractionModalProps {
-  isOpen: boolean
-  onClose: () => void
-  attraction?: Attraction | null
-  onSave: (data: Partial<Attraction>) => void
+  isOpen: boolean;
+  onClose: () => void;
+  attraction?: Attraction | null;
+  onSave: (data: Partial<Attraction>) => void;
 }
 
-export default function AttractionModal({ isOpen, onClose, attraction, onSave }: AttractionModalProps) {
-  const { t } = useTranslation()
+export default function AttractionModal({
+  isOpen,
+  onClose,
+  attraction,
+  onSave,
+}: AttractionModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<Attraction>>({
     name: "",
     description: "",
@@ -30,7 +41,7 @@ export default function AttractionModal({ isOpen, onClose, attraction, onSave }:
     weight: 0,
     setupTime: 0,
     image: "",
-  })
+  });
 
   useEffect(() => {
     if (attraction) {
@@ -44,7 +55,7 @@ export default function AttractionModal({ isOpen, onClose, attraction, onSave }:
         weight: attraction.weight,
         setupTime: attraction.setupTime,
         image: attraction.image,
-      })
+      });
     } else {
       setFormData({
         name: "",
@@ -56,12 +67,14 @@ export default function AttractionModal({ isOpen, onClose, attraction, onSave }:
         weight: 0,
         setupTime: 0,
         image: "",
-      })
+      });
     }
-  }, [attraction, isOpen])
+  }, [attraction, isOpen]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]:
@@ -73,28 +86,38 @@ export default function AttractionModal({ isOpen, onClose, attraction, onSave }:
         name === "setupTime"
           ? Number.parseFloat(value)
           : value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData)
-  }
+    e.preventDefault();
+    onSave(formData);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{attraction ? t("attractions.edit") : t("attractions.new")}</DialogTitle>
+          <DialogTitle>
+            {attraction ? t("attractions.edit") : t("attractions.new")}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 gap-2">
               <Label htmlFor="name">{t("attractions.name")}</Label>
-              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div className="grid grid-cols-1 gap-2">
-              <Label htmlFor="description">{t("attractions.description")}</Label>
+              <Label htmlFor="description">
+                {t("attractions.description")}
+              </Label>
               <Textarea
                 id="description"
                 name="description"
@@ -185,13 +208,33 @@ export default function AttractionModal({ isOpen, onClose, attraction, onSave }:
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <Label htmlFor="image">{t("attractions.imageUrl")}</Label>
+                {formData.image && (
+                  <img
+                    src={formData.image}
+                    alt="Podgląd"
+                    className="mt-2 h-32 object-contain border rounded"
+                  />
+                )}
                 <Input
                   id="image"
                   name="image"
-                  type="text"
-                  value={formData.image || ""}
-                  onChange={handleChange}
-                  placeholder="/bouncy-castle.png"
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    const formDataUpload = new FormData();
+                    formDataUpload.append("file", file);
+
+                    const res = await fetch("/api/upload", {
+                      method: "POST",
+                      body: formDataUpload,
+                    });
+
+                    const data = await res.json();
+                    setFormData((prev) => ({ ...prev, image: data.url }));
+                  }}
                 />
               </div>
             </div>
@@ -205,5 +248,5 @@ export default function AttractionModal({ isOpen, onClose, attraction, onSave }:
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

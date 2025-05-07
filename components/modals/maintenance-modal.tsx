@@ -1,22 +1,28 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { CalendarIcon, Upload } from "lucide-react"
-import type { MaintenanceRecord } from "@/lib/types"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon, Upload } from "lucide-react";
+import type { MaintenanceRecord } from "@/app/types/types";
 
 interface MaintenanceModalProps {
-  isOpen: boolean
-  onClose: () => void
-  attractionId: string
-  maintenanceRecord?: MaintenanceRecord | null
-  onSave: (data: Partial<MaintenanceRecord>) => void
+  isOpen: boolean;
+  onClose: () => void;
+  attractionId: string;
+  maintenanceRecord?: MaintenanceRecord | null;
+  onSave: (data: Partial<MaintenanceRecord>) => void;
 }
 
 export default function MaintenanceModal({
@@ -29,45 +35,55 @@ export default function MaintenanceModal({
   const [date, setDate] = useState<string>(
     maintenanceRecord?.date
       ? new Date(maintenanceRecord.date).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0],
-  )
-  const [cost, setCost] = useState<string>(maintenanceRecord?.cost?.toString() || "")
-  const [description, setDescription] = useState(maintenanceRecord?.description || "")
-  const [performedBy, setPerformedBy] = useState(maintenanceRecord?.performedBy || "")
-  const [images, setImages] = useState<File[]>([])
-  const [imageUrls, setImageUrls] = useState<string[]>(maintenanceRecord?.images || [])
+      : new Date().toISOString().split("T")[0]
+  );
+  const [cost, setCost] = useState<string>(
+    maintenanceRecord?.cost?.toString() || ""
+  );
+  const [description, setDescription] = useState(
+    maintenanceRecord?.description || ""
+  );
+  const [performedBy, setPerformedBy] = useState(
+    maintenanceRecord?.performedBy || ""
+  );
+  const [images, setImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>(
+    maintenanceRecord?.images || []
+  );
 
   useEffect(() => {
     if (maintenanceRecord) {
-      setDate(new Date(maintenanceRecord.date).toISOString().split("T")[0])
-      setCost(maintenanceRecord.cost.toString())
-      setDescription(maintenanceRecord.description)
-      setPerformedBy(maintenanceRecord.performedBy)
-      setImageUrls(maintenanceRecord.images || [])
+      setDate(new Date(maintenanceRecord.date).toISOString().split("T")[0]);
+      setCost(maintenanceRecord.cost.toString());
+      setDescription(maintenanceRecord.description);
+      setPerformedBy(maintenanceRecord.performedBy);
+      setImageUrls(maintenanceRecord.images || []);
     } else {
-      resetForm()
+      resetForm();
     }
-  }, [maintenanceRecord])
+  }, [maintenanceRecord]);
 
   const resetForm = () => {
-    setDate(new Date().toISOString().split("T")[0])
-    setCost("")
-    setDescription("")
-    setPerformedBy("")
-    setImages([])
-    setImageUrls([])
-  }
+    setDate(new Date().toISOString().split("T")[0]);
+    setCost("");
+    setDescription("");
+    setPerformedBy("");
+    setImages([]);
+    setImageUrls([]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Simulate image upload
-    const newImageUrls = [...imageUrls]
+    const newImageUrls = [...imageUrls];
     if (images.length > 0) {
       // In a real app, you would upload the images to a server
       // For now, we'll just create placeholder URLs
       for (let i = 0; i < images.length; i++) {
-        newImageUrls.push(`/placeholder.svg?height=300&width=300&query=maintenance${i}`)
+        newImageUrls.push(
+          `/placeholder.svg?height=300&width=300&query=maintenance${i}`
+        );
       }
     }
 
@@ -78,23 +94,27 @@ export default function MaintenanceModal({
       performedBy,
       images: newImageUrls,
       attractionId,
-    }
+    };
 
-    onSave(maintenanceData)
-  }
+    onSave(maintenanceData);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newImages = Array.from(e.target.files)
-      setImages((prev) => [...prev, ...newImages])
+      const newImages = Array.from(e.target.files);
+      setImages((prev) => [...prev, ...newImages]);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{maintenanceRecord ? "Edit Maintenance Record" : "Add Maintenance Record"}</DialogTitle>
+          <DialogTitle>
+            {maintenanceRecord
+              ? "Edit Maintenance Record"
+              : "Add Maintenance Record"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -161,9 +181,14 @@ export default function MaintenanceModal({
                 className="hidden"
                 onChange={handleImageChange}
               />
-              <label htmlFor="images" className="flex flex-col items-center justify-center cursor-pointer space-y-2">
+              <label
+                htmlFor="images"
+                className="flex flex-col items-center justify-center cursor-pointer space-y-2"
+              >
                 <Upload className="h-8 w-8 text-gray-400" />
-                <span className="text-sm text-gray-500 dark:text-gray-400">Click to upload maintenance images</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Click to upload maintenance images
+                </span>
               </label>
             </div>
             {(images.length > 0 || imageUrls.length > 0) && (
@@ -173,7 +198,10 @@ export default function MaintenanceModal({
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {imageUrls.map((url, index) => (
-                    <div key={`existing-${index}`} className="relative w-16 h-16 rounded-md overflow-hidden">
+                    <div
+                      key={`existing-${index}`}
+                      className="relative w-16 h-16 rounded-md overflow-hidden"
+                    >
                       <img
                         src={url || "/placeholder.svg"}
                         alt={`Maintenance ${index}`}
@@ -182,8 +210,13 @@ export default function MaintenanceModal({
                     </div>
                   ))}
                   {Array.from(images).map((file, index) => (
-                    <div key={`new-${index}`} className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100">
-                      <div className="flex items-center justify-center h-full text-xs text-gray-500">New Image</div>
+                    <div
+                      key={`new-${index}`}
+                      className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100"
+                    >
+                      <div className="flex items-center justify-center h-full text-xs text-gray-500">
+                        New Image
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -195,10 +228,14 @@ export default function MaintenanceModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">{maintenanceRecord ? "Update Maintenance Record" : "Add Maintenance Record"}</Button>
+            <Button type="submit">
+              {maintenanceRecord
+                ? "Update Maintenance Record"
+                : "Add Maintenance Record"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

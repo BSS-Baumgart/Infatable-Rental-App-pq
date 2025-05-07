@@ -1,138 +1,173 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import AppLayout from "@/components/layout/app-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { reservations as initialReservations, clients } from "@/lib/mock-data"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Edit, Eye, Plus, Search, Trash, FileText } from "lucide-react"
-import type { Reservation, ReservationStatus } from "@/lib/types"
-import ReservationWizard from "@/components/modals/reservation-wizard"
-import InvoiceModal from "@/components/modals/invoice-modal"
-import { useToast } from "@/components/ui/use-toast"
-import { useTranslation } from "@/lib/i18n/translation-context"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import AppLayout from "@/components/layout/app-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Edit, Eye, Plus, Search, Trash, FileText } from "lucide-react";
+import type { Reservation, ReservationStatus } from "@/app/types/types";
+import ReservationWizard from "@/components/modals/reservation-wizard";
+import InvoiceModal from "@/components/modals/invoice-modal";
+import { useToast } from "@/components/ui/use-toast";
+import { useTranslation } from "@/lib/i18n/translation-context";
+import {
+  createReservation,
+  deleteReservation,
+  getReservations,
+  updateReservation,
+} from "@/services/reservation-service";
+import { getCurrentUser } from "@/lib/auth";
+import type { SafeUser } from "@/app/types/types";
 
 const statusColors: Record<ReservationStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  "in-progress": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  pending:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  "in-progress":
+    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  completed:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-}
-
-// Mockowany aktualny użytkownik - w rzeczywistej aplikacji będzie pobierany z kontekstu uwierzytelniania
-const currentUser = { id: "user-1", role: "admin" }
+};
 
 export default function ReservationsPage() {
-  const { t } = useTranslation()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<ReservationStatus | "all">("all")
-  const [reservations, setReservations] = useState<Reservation[]>(initialReservations)
-  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false)
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
-  const [currentReservation, setCurrentReservation] = useState<Reservation | null>(null)
-  const { toast } = useToast()
-  const router = useRouter()
+  const { t, formatT } = useTranslation();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ReservationStatus | "all">(
+    "all"
+  );
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [currentReservation, setCurrentReservation] =
+    useState<Reservation | null>(null);
+  const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
+  const { toast } = useToast();
+  const router = useRouter();
 
-  // Filter reservations based on search term, status, and user assignment
+  useEffect(() => {
+    getCurrentUser().then(setCurrentUser);
+  }, []);
+
+  useEffect(() => {
+    getReservations()
+      .then((data) => setReservations(data))
+      .catch(() => {
+        toast({ title: t("common.error"), description: t("common.tryAgain") });
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch =
-      reservation.client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reservation.client?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reservation.id.toLowerCase().includes(searchTerm.toLowerCase())
+      reservation.client?.firstName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      reservation.client?.lastName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      reservation.id.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === "all" || reservation.status === statusFilter
+    const matchesStatus =
+      statusFilter === "all" || reservation.status === statusFilter;
 
-    // Admin widzi wszystkie rezerwacje, inni użytkownicy tylko te, do których są przypisani
     const isAssignedOrAdmin =
-      currentUser.role === "admin" || (reservation.assignedUsers && reservation.assignedUsers.includes(currentUser.id))
+      currentUser?.role === "admin" ||
+      (reservation.assignedUsers &&
+        currentUser &&
+        reservation.assignedUsers.includes(currentUser.id));
 
-    return matchesSearch && matchesStatus && isAssignedOrAdmin
-  })
+    return matchesSearch && matchesStatus && isAssignedOrAdmin;
+  });
 
   const handleOpenReservationModal = (reservation?: Reservation) => {
-    setCurrentReservation(reservation || null)
-    setIsReservationModalOpen(true)
-  }
+    setCurrentReservation(reservation || null);
+    setIsReservationModalOpen(true);
+  };
 
-  const handleCloseReservationModal = () => {
-    setIsReservationModalOpen(false)
-    setCurrentReservation(null)
-  }
+  const handleCloseReservationModal = async () => {
+    setIsReservationModalOpen(false);
+    setCurrentReservation(null);
+    const fresh = await getReservations();
+    setReservations(fresh);
+  };
 
   const handleOpenInvoiceModal = (reservation: Reservation) => {
-    setCurrentReservation(reservation)
-    setIsInvoiceModalOpen(true)
-  }
+    setCurrentReservation(reservation);
+    setIsInvoiceModalOpen(true);
+  };
 
   const handleCloseInvoiceModal = () => {
-    setIsInvoiceModalOpen(false)
-  }
+    setIsInvoiceModalOpen(false);
+  };
 
   const handleViewReservation = (id: string) => {
-    router.push(`/reservations/${id}`)
-  }
+    router.push(`/reservations/${id}`);
+  };
 
-  const handleSaveReservation = (data: Partial<Reservation>) => {
-    if (currentReservation) {
-      // Update existing reservation
-      setReservations((prev) =>
-        prev.map((res) => (res.id === currentReservation.id ? ({ ...res, ...data } as Reservation) : res)),
-      )
+  const handleSaveReservation = async (data: Partial<Reservation>) => {
+    try {
+      const saved = data.id
+        ? await updateReservation(data.id, data)
+        : await createReservation(data);
+
+      const fresh = await getReservations();
+      setReservations(fresh);
+
       toast({
-        title: t("reservations.updated"),
-        description: t("reservations.updateSuccess", { id: currentReservation.id }),
-      })
-    } else {
-      // Create new reservation
-      // Make sure we have the client object from the clients array
-      const clientObj = data.clientId ? clients.find((c) => c.id === data.clientId) : null
-
-      // Ensure current user is assigned to the reservation if not already
-      const assignedUsers = data.assignedUsers || []
-      if (!assignedUsers.includes(currentUser.id)) {
-        assignedUsers.push(currentUser.id)
-      }
-
-      const newReservation = {
-        ...data,
-        id: `RES-${Math.floor(Math.random() * 10000)}`,
-        client: clientObj, // Ensure client object is included
-        assignedUsers, // Add assigned users
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Reservation
-
-      setReservations((prev) => [...prev, newReservation])
-      toast({
-        title: t("reservations.created"),
-        description: t("reservations.createSuccess"),
-      })
+        title: data.id ? t("reservations.updated") : t("reservations.created"),
+        description: data.id
+          ? t("reservations.updateSuccess")
+          : t("reservations.createSuccess"),
+      });
+    } catch {
+      toast({ title: t("common.error"), description: t("common.tryAgain") });
+    } finally {
+      handleCloseReservationModal();
     }
-    handleCloseReservationModal()
-  }
+  };
 
   const handleSaveInvoice = (data: any) => {
     toast({
       title: t("invoices.created"),
-      description: t("invoices.createSuccess", { id: currentReservation?.id }),
-    })
-    handleCloseInvoiceModal()
-  }
+      description: formatT("invoices.createSuccess", {
+        id: currentReservation?.id,
+      }),
+    });
+    handleCloseInvoiceModal();
+  };
 
-  const handleDeleteReservation = (id: string) => {
-    if (confirm(t("reservations.confirmDelete"))) {
-      setReservations((prev) => prev.filter((res) => res.id !== id))
+  const handleDeleteReservation = async (id: string) => {
+    if (!confirm(t("reservations.confirmDelete"))) return;
+
+    try {
+      await deleteReservation(id);
+      const fresh = await getReservations();
+      setReservations(fresh);
+
       toast({
         title: t("reservations.deleted"),
-        description: t("reservations.deleteSuccess", { id }),
-      })
+        description: formatT("reservations.deleteSuccess", { id }),
+      });
+    } catch {
+      toast({ title: t("common.error"), description: t("common.tryAgain") });
     }
-  }
+  };
 
   const handleReservationClick = (id: string) => {
-    router.push(`/reservations/${id}`)
+    router.push(`/reservations/${id}`);
+  };
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+          {t("common.loading")}
+        </div>
+      </AppLayout>
+    );
   }
 
   return (
@@ -205,13 +240,27 @@ export default function ReservationsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-800">
-                    <th className="text-left font-medium p-2">{t("common.id")}</th>
-                    <th className="text-left font-medium p-2">{t("reservations.client")}</th>
-                    <th className="text-left font-medium p-2">{t("reservations.date")}</th>
-                    <th className="text-left font-medium p-2">{t("reservations.attraction")}</th>
-                    <th className="text-left font-medium p-2">{t("reservations.price")}</th>
-                    <th className="text-left font-medium p-2">{t("reservations.status")}</th>
-                    <th className="text-right font-medium p-2">{t("common.actions")}</th>
+                    <th className="text-left font-medium p-2">
+                      {t("common.id")}
+                    </th>
+                    <th className="text-left font-medium p-2">
+                      {t("reservations.client")}
+                    </th>
+                    <th className="text-left font-medium p-2">
+                      {t("reservations.date")}
+                    </th>
+                    <th className="text-left font-medium p-2">
+                      {t("reservations.attraction")}
+                    </th>
+                    <th className="text-left font-medium p-2">
+                      {t("reservations.price")}
+                    </th>
+                    <th className="text-left font-medium p-2">
+                      {t("reservations.status")}
+                    </th>
+                    <th className="text-right font-medium p-2">
+                      {t("common.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -240,23 +289,40 @@ export default function ReservationsPage() {
                       </td>
                       <td className="p-2 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleViewReservation(reservation.id)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleViewReservation(reservation.id)
+                            }
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={(e) => {
-                              e.stopPropagation()
-                              handleOpenReservationModal(reservation)
+                              e.stopPropagation();
+                              handleOpenReservationModal(reservation);
                             }}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleOpenInvoiceModal(reservation)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenInvoiceModal(reservation)}
+                          >
                             <FileText className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteReservation(reservation.id)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteReservation(reservation.id);
+                            }}
+                          >
                             <Trash className="h-4 w-4" />
                           </Button>
                         </div>
@@ -284,5 +350,5 @@ export default function ReservationsPage() {
         onSave={handleSaveInvoice}
       />
     </AppLayout>
-  )
+  );
 }

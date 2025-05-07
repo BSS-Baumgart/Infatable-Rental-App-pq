@@ -1,4 +1,4 @@
-import type { TranslationRecord } from "../types"
+import type { TranslationRecord } from "../types";
 
 export const attractionsTranslations: TranslationRecord = {
   en: {
@@ -7,7 +7,8 @@ export const attractionsTranslations: TranslationRecord = {
     "attractions.edit": "Edit Attraction",
     "attractions.view": "View Attraction",
     "attractions.delete": "Delete Attraction",
-    "attractions.confirmDelete": "Are you sure you want to delete this attraction?",
+    "attractions.confirmDelete":
+      "Are you sure you want to delete this attraction?",
     "attractions.name": "Name",
     "attractions.type": "Type",
     "attractions.price": "Price",
@@ -73,10 +74,12 @@ export const attractionsTranslations: TranslationRecord = {
     "attractionDetails.maintenanceHistory": "Maintenance History",
     "attractionDetails.addMaintenanceRecord": "Add Maintenance Record",
     "attractionDetails.noMaintenanceRecords": "No maintenance records found",
-    "attractionDetails.noReservations": "No reservations found for this attraction",
+    "attractionDetails.noReservations":
+      "No reservations found for this attraction",
     "attractionDetails.noDocuments": "No documents found for this attraction",
     "attractionDetails.addDocument": "Add Document",
     "attractionDetails.back": "Back to Attractions",
+    "attractionDetails.name": "Name",
   },
   pl: {
     "attractions.title": "Atrakcje",
@@ -149,10 +152,14 @@ export const attractionsTranslations: TranslationRecord = {
     "attractionDetails.maintenance": "Konserwacja",
     "attractionDetails.maintenanceHistory": "Historia konserwacji",
     "attractionDetails.addMaintenanceRecord": "Dodaj wpis konserwacji",
-    "attractionDetails.noMaintenanceRecords": "Nie znaleziono wpisów konserwacji",
-    "attractionDetails.noReservations": "Nie znaleziono rezerwacji dla tej atrakcji",
-    "attractionDetails.noDocuments": "Nie znaleziono dokumentów dla tej atrakcji",
+    "attractionDetails.noMaintenanceRecords":
+      "Nie znaleziono wpisów konserwacji",
+    "attractionDetails.noReservations":
+      "Nie znaleziono rezerwacji dla tej atrakcji",
+    "attractionDetails.noDocuments":
+      "Nie znaleziono dokumentów dla tej atrakcji",
     "attractionDetails.addDocument": "Dodaj dokument",
     "attractionDetails.back": "Powrót do atrakcji",
+    "attractionDetails.name": "Nazwa",
   },
-}
+};

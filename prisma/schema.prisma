@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum UserRole {
+  admin
+  employee
+  manager
+  viewer
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  passwordHash  String
+  role      UserRole
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs AuditLog[]
+
+  Reservation Reservation[] @relation("AssignedUsersToReservations")
+  cancelledReservations Reservation[] @relation("CancelledByUser")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  target    String?
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id             String   @id @default(uuid())
+  firstName      String
+  lastName       String
+  phone          String
+  email          String?
+  street         String
+  buildingNumber String
+  postalCode     String
+  city           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  Reservation Reservation[]
+
+  Invoice Invoice[]
+}
+
+model Attraction {
+  id                  String              @id @default(uuid())
+  name                String
+  description         String?
+  width               Float
+  height              Float
+  length              Float
+  weight              Float
+  price               Float
+  setupTime           Int
+  image               String?
+  maintenanceRecords  MaintenanceRecord[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  ReservationAttraction ReservationAttraction[]
+
+  Document Document[] @relation(map: "DocumentAttraction")
+}
+
+model MaintenanceRecord {
+  id           String   @id @default(uuid())
+  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  attractionId String
+  date         DateTime
+  description  String
+  cost         Float
+  performedBy  String
+  imagesJson   String?
+  createdAt    DateTime @default(now())
+}
+
+enum ReservationStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum InvoiceStatus {
+  paid
+  unpaid
+}
+
+enum DocumentRelationType {
+  attraction
+  reservation
+}
+
+model Reservation {
+  id              String                 @id @default(uuid())
+  client          Client                @relation(fields: [clientId], references: [id])
+  clientId        String
+  attractions     ReservationAttraction[]
+  status          ReservationStatus
+  startDate       DateTime
+  endDate         DateTime
+  totalPrice      Float
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  assignedUsers   User[] @relation("AssignedUsersToReservations")
+  invoices        Invoice[]
+  documents       Document[]
+
+  cancelledAt     DateTime?
+  cancelledBy     User?                 @relation("CancelledByUser", fields: [cancelledById], references: [id])
+  cancelledById   String?
+}
+
+model ReservationAttraction {
+  id            String      @id @default(uuid())
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservationId String
+  attraction    Attraction  @relation(fields: [attractionId], references: [id])
+  attractionId  String
+  quantity      Int
+}
+
+model Invoice {
+  id            String      @id @default(uuid())
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservationId String
+  client        Client?     @relation(fields: [clientId], references: [id])
+  clientId      String?
+  issueDate     DateTime
+  dueDate       DateTime
+  amount        Float
+  status        InvoiceStatus
+  pdfUrl        String?
+}
+
+model Document {
+  id            String               @id @default(uuid())
+  name          String
+  type          String
+  size          Int
+  url           String
+  uploadedAt    DateTime             @default(now())
+  relatedType   DocumentRelationType
+  relatedId     String
+  description   String?
+
+  attraction    Attraction?         @relation(fields: [relatedId], references: [id], onDelete: Cascade, map: "DocumentAttraction")
+  reservation   Reservation?        @relation(fields: [relatedId], references: [id], onDelete: Cascade, map: "DocumentReservation")
+}

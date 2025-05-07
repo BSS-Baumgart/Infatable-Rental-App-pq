@@ -1,4 +1,12 @@
-import type { User, Client, Attraction, Reservation, Invoice, Document, MaintenanceRecord } from "./types"
+import type {
+  User,
+  Client,
+  Attraction,
+  Reservation,
+  Invoice,
+  Document,
+  MaintenanceRecord,
+} from "../app/types/types";
 
 // Mock Users
 export const users: User[] = [
@@ -14,7 +22,7 @@ export const users: User[] = [
     email: "jane.smith@example.com",
     role: "employee",
   },
-]
+];
 
 // Mock Clients
 export const clients: Client[] = [
@@ -77,7 +85,7 @@ export const clients: Client[] = [
     city: "Poznan",
     createdAt: new Date("2023-05-12"),
   },
-]
+];
 
 // Mock Attractions
 export const attractions: Attraction[] = [
@@ -147,26 +155,26 @@ export const attractions: Attraction[] = [
     setupTime: 35,
     image: "/colorful-kids-bounce-house.png",
   },
-]
+];
 
 // Helper function to get random status
 const getRandomStatus = <T extends string>(statuses: T[]): T => {
-  return statuses[Math.floor(Math.random() * statuses.length)]
-}
+  return statuses[Math.floor(Math.random() * statuses.length)];
+};
 
 // Helper function to get random date in the next 30 days
 const getRandomFutureDate = (daysAhead = 30): Date => {
-  const date = new Date()
-  date.setDate(date.getDate() + Math.floor(Math.random() * daysAhead))
-  return date
-}
+  const date = new Date();
+  date.setDate(date.getDate() + Math.floor(Math.random() * daysAhead));
+  return date;
+};
 
 // Helper function to get random date in the past 30 days
 const getRandomPastDate = (daysAgo = 30): Date => {
-  const date = new Date()
-  date.setDate(date.getDate() - Math.floor(Math.random() * daysAgo))
-  return date
-}
+  const date = new Date();
+  date.setDate(date.getDate() - Math.floor(Math.random() * daysAgo));
+  return date;
+};
 
 // Mock Maintenance Records
 export const maintenanceRecords: MaintenanceRecord[] = [
@@ -175,7 +183,8 @@ export const maintenanceRecords: MaintenanceRecord[] = [
     attractionId: "1",
     date: getRandomPastDate(60),
     cost: 120,
-    description: "Regular inspection and cleaning. Replaced worn-out fabric on the left side.",
+    description:
+      "Regular inspection and cleaning. Replaced worn-out fabric on the left side.",
     performedBy: "Mike Technician",
     images: ["/maintenance-image-1.jpg"],
     createdAt: getRandomPastDate(60),
@@ -195,7 +204,8 @@ export const maintenanceRecords: MaintenanceRecord[] = [
     attractionId: "2",
     date: getRandomPastDate(45),
     cost: 150,
-    description: "Complete cleaning and safety inspection. Replaced blower motor.",
+    description:
+      "Complete cleaning and safety inspection. Replaced blower motor.",
     performedBy: "Mike Technician",
     images: ["/maintenance-image-3.jpg"],
     createdAt: getRandomPastDate(45),
@@ -210,12 +220,14 @@ export const maintenanceRecords: MaintenanceRecord[] = [
     images: ["/maintenance-image-4.jpg"],
     createdAt: getRandomPastDate(20),
   },
-]
+];
 
 // Add maintenance records to attractions
 attractions.forEach((attraction) => {
-  attraction.maintenanceRecords = maintenanceRecords.filter((record) => record.attractionId === attraction.id)
-})
+  attraction.maintenanceRecords = maintenanceRecords.filter(
+    (record) => record.attractionId === attraction.id
+  );
+});
 
 // Mock Reservations
 export const reservations: Reservation[] = [
@@ -239,7 +251,9 @@ export const reservations: Reservation[] = [
     id: "2",
     clientId: "2",
     client: clients[1],
-    attractions: [{ attractionId: "2", attraction: attractions[1], quantity: 1 }],
+    attractions: [
+      { attractionId: "2", attraction: attractions[1], quantity: 1 },
+    ],
     status: "in-progress",
     startDate: new Date(),
     endDate: getRandomFutureDate(1),
@@ -267,7 +281,9 @@ export const reservations: Reservation[] = [
     id: "4",
     clientId: "4",
     client: clients[3],
-    attractions: [{ attractionId: "6", attraction: attractions[5], quantity: 2 }],
+    attractions: [
+      { attractionId: "6", attraction: attractions[5], quantity: 2 },
+    ],
     status: "pending",
     startDate: getRandomFutureDate(15),
     endDate: getRandomFutureDate(16),
@@ -293,7 +309,7 @@ export const reservations: Reservation[] = [
     createdAt: getRandomPastDate(1),
     updatedAt: getRandomPastDate(1),
   },
-]
+];
 
 // Mock Invoices
 export const invoices: Invoice[] = [
@@ -320,7 +336,7 @@ export const invoices: Invoice[] = [
     amount: 250,
     status: "unpaid",
   },
-]
+];
 
 // Mock Documents
 export const documents: Document[] = [
@@ -384,14 +400,17 @@ export const documents: Document[] = [
       id: "5",
     },
   },
-]
+];
 
 // Dashboard statistics
 export const dashboardStats = {
   totalReservations: reservations.length,
   totalClients: clients.length,
   totalAttractions: attractions.length,
-  totalRevenue: reservations.reduce((sum, reservation) => sum + reservation.totalPrice, 0),
+  totalRevenue: reservations.reduce(
+    (sum, reservation) => sum + reservation.totalPrice,
+    0
+  ),
   reservationsByStatus: {
     pending: reservations.filter((r) => r.status === "pending").length,
     inProgress: reservations.filter((r) => r.status === "in-progress").length,
@@ -404,4 +423,4 @@ export const dashboardStats = {
     { attraction: attractions[1], count: 2 },
     { attraction: attractions[2], count: 2 },
   ],
-}
+};
