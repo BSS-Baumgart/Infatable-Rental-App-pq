@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { SafeUser } from "@/app/types/types";
-import { DateRange } from "react-date-range";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -41,6 +40,15 @@ import type {
 import ClientModal from "./client-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth";
+import DatePicker from "react-datepicker";
+
+import {
+  createReservation,
+  updateReservation,
+} from "@/services/reservation-service";
+import { useTranslation } from "@/lib/i18n/translation-context";
+import { RESERVATION_STATUSES } from "@/app/constants/arrays";
+import { createClient } from "@/services/clients-service";
 
 interface ReservationWizardProps {
   isOpen: boolean;
@@ -50,13 +58,6 @@ interface ReservationWizardProps {
   initialDate?: Date | null;
 }
 
-const statusOptions: ReservationStatus[] = [
-  "pending",
-  "in-progress",
-  "completed",
-  "cancelled",
-];
-
 export default function ReservationWizard({
   isOpen,
   onClose,
@@ -64,6 +65,7 @@ export default function ReservationWizard({
   onSave,
   initialDate,
 }: ReservationWizardProps) {
+  const { t, formatT } = useTranslation();
   const [step, setStep] = useState(1);
   const [clients, setClients] = useState<Client[]>([]);
   const [allAttractions, setAllAttractions] = useState<Attraction[]>([]);
@@ -73,6 +75,17 @@ export default function ReservationWizard({
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
   const [formData, setFormData] = useState<Partial<ReservationType>>({});
   const [selectedAttractionId, setSelectedAttractionId] = useState<string>("");
+  const [dateError, setDateError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (formData.startDate && formData.endDate) {
+      if (formData.endDate < formData.startDate) {
+        setDateError("End date cannot be before start date.");
+      } else {
+        setDateError(null);
+      }
+    }
+  }, [formData.startDate, formData.endDate]);
 
   useEffect(() => {
     getCurrentUser().then((user) => {
@@ -181,18 +194,15 @@ export default function ReservationWizard({
       return;
     }
 
-    const toISO = (d?: Date) => (d ? new Date(d).toISOString() : undefined);
-
-    const dataToSave = {
+    const apiPayload = {
       ...formData,
       clientId: selectedClient.id,
-      startDate: toISO(formData.startDate),
-      endDate: toISO(formData.endDate),
+      startDate: formData.startDate?.toISOString(),
+      endDate: formData.endDate?.toISOString(),
       attractions: formData.attractions ?? [],
       assignedUsers: (formData.assignedUsers || []).map((u: any) =>
         typeof u === "string" ? u : u.id
       ),
-      ...(reservation ? { id: reservation.id } : {}),
     };
 
     try {
@@ -203,7 +213,7 @@ export default function ReservationWizard({
         {
           method: reservation ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dataToSave),
+          body: JSON.stringify(apiPayload),
         }
       );
 
@@ -216,23 +226,21 @@ export default function ReservationWizard({
     }
   };
 
-  const handleSaveClient = (clientData: Partial<Client>) => {
-    const newClient = {
-      ...clientData,
-      id: clientData.id || `CL-${Math.floor(Math.random() * 10000)}`,
-      createdAt: new Date(),
-    } as Client;
-
-    if (clientData.id) {
-      setClients((prev) =>
-        prev.map((c) => (c.id === clientData.id ? newClient : c))
+  const handleSaveClient = async (clientData: Partial<Client>) => {
+    try {
+      const newClient = await createClient(
+        clientData as Omit<Client, "id" | "createdAt">
       );
-    } else {
-      setClients((prev) => [...prev, newClient]);
-    }
 
-    setFormData((prev) => ({ ...prev, clientId: newClient.id }));
-    setIsClientModalOpen(false);
+      setClients((prev) => [...prev, newClient]);
+
+      setFormData((prev) => ({ ...prev, clientId: newClient.id }));
+
+      setIsClientModalOpen(false);
+      setClientSearchTerm("");
+    } catch (error) {
+      alert("Nie udało się zapisać klienta.");
+    }
   };
 
   const nextStep = () => {
@@ -464,34 +472,40 @@ export default function ReservationWizard({
                   <h3 className="text-lg font-medium mb-4">
                     Select Attractions & Dates
                   </h3>
-
+                  {dateError && (
+                    <p className="text-sm text-red-500 dark:text-red-400">
+                      {dateError}
+                    </p>
+                  )}
                   {/* Date range picker */}
-                  <div className="grid w-full items-center gap-2">
-                    <Label>Reservation Dates</Label>
-                    <DateRange
-                      ranges={[
-                        {
-                          startDate: formData.startDate || new Date(),
-                          endDate: formData.endDate || new Date(),
-                          key: "selection",
-                        },
-                      ]}
-                      onChange={(ranges: any) => {
-                        const selection = ranges.selection;
-                        setFormData((prev) => ({
-                          ...prev,
-                          startDate: selection.startDate,
-                          endDate: selection.endDate,
-                        }));
-                      }}
-                      moveRangeOnFirstSelection={false}
-                      months={1}
-                      direction="horizontal"
-                      showDateDisplay={true}
-                      editableDateInputs={true}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid w-full items-center gap-2">
+                      <Label>Start Date & Time</Label>
+                      <DatePicker
+                        selected={formData.startDate || new Date()}
+                        onChange={(date) => {
+                          if (!date) return;
+                          setFormData((prev) => ({ ...prev, startDate: date }));
+                        }}
+                        showTimeSelect
+                        dateFormat="Pp"
+                        className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div className="grid w-full items-center gap-2">
+                      <Label>End Date & Time</Label>
+                      <DatePicker
+                        selected={formData.endDate || new Date()}
+                        onChange={(date) => {
+                          if (!date) return;
+                          setFormData((prev) => ({ ...prev, startDate: date }));
+                        }}
+                        showTimeSelect
+                        dateFormat="Pp"
+                        className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2"
+                      />
+                    </div>
                   </div>
-
                   {/* Status select */}
                   <div className="grid w-full items-center gap-2">
                     <Label htmlFor="status">Status</Label>
@@ -505,16 +519,16 @@ export default function ReservationWizard({
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        {statusOptions.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status.charAt(0).toUpperCase() +
-                              status.slice(1).replace("-", " ")}
-                          </SelectItem>
-                        ))}
+                        {RESERVATION_STATUSES.map(
+                          (status: ReservationStatus) => (
+                            <SelectItem key={status} value={status}>
+                              {t(`reservations.status.${status}`)}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
-
                   {/* Attractions */}
                   <div className="space-y-2">
                     <Label>Selected Attractions</Label>
@@ -582,7 +596,6 @@ export default function ReservationWizard({
                       </Select>
                     </div>
                   </div>
-
                   {/* Notes */}
                   <div className="grid w-full items-center gap-2">
                     <Label htmlFor="notes">Notes</Label>
@@ -595,7 +608,6 @@ export default function ReservationWizard({
                       className="min-h-[100px] h-10"
                     />
                   </div>
-
                   <div className="flex justify-between mt-6">
                     <Button
                       type="button"
@@ -613,7 +625,8 @@ export default function ReservationWizard({
                       disabled={
                         !formData.startDate ||
                         !formData.endDate ||
-                        formData.attractions?.length === 0
+                        formData.attractions?.length === 0 ||
+                        !!dateError
                       }
                     >
                       Next

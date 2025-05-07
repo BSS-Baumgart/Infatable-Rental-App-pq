@@ -5,11 +5,7 @@ export async function GET() {
   const reservations = await prisma.reservation.findMany({
     include: {
       client: true,
-      attractions: {
-        include: {
-          attraction: true,
-        },
-      },
+      attractions: { include: { attraction: true } },
       assignedUsers: true,
     },
     orderBy: { createdAt: "desc" },
@@ -21,46 +17,34 @@ export async function GET() {
 export async function POST(req: Request) {
   const data = await req.json();
 
-  if (
-    !data.clientId ||
-    !data.startDate ||
-    !data.endDate ||
-    !Array.isArray(data.attractions)
-  ) {
-    return NextResponse.json({ error: "Invalid data" }, { status: 400 });
-  }
-
-  const reservation = await prisma.reservation.create({
+  const created = await prisma.reservation.create({
     data: {
       clientId: data.clientId,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
-      totalPrice: data.totalPrice ?? 0,
+      totalPrice: data.totalPrice,
       notes: data.notes ?? "",
-      status: data.status || "pending",
-      assignedUsers:
-        Array.isArray(data.assignedUsers) && data.assignedUsers.length
-          ? {
-              connect: data.assignedUsers.map((id: string) => ({ id })),
-            }
-          : undefined,
+      status: data.status ?? "pending",
+      assignedUsers: {
+        connect: Array.isArray(data.assignedUsers)
+          ? data.assignedUsers.map((id: string) => ({ id }))
+          : [],
+      },
       attractions: {
-        create: data.attractions.map((item: any) => ({
-          attractionId: item.attractionId,
-          quantity: item.quantity ?? 1,
-        })),
+        create: Array.isArray(data.attractions)
+          ? data.attractions.map((a: any) => ({
+              attractionId: a.attractionId,
+              quantity: a.quantity,
+            }))
+          : [],
       },
     },
     include: {
       client: true,
-      attractions: {
-        include: {
-          attraction: true,
-        },
-      },
+      attractions: { include: { attraction: true } },
       assignedUsers: true,
     },
   });
 
-  return NextResponse.json(reservation);
+  return NextResponse.json(created);
 }

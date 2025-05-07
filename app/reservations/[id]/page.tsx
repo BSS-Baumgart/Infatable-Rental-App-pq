@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,18 @@ import ReservationWizard from "@/components/modals/reservation-wizard";
 import InvoiceModal from "@/components/modals/invoice-modal";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "@/lib/i18n/translation-context";
+import {
+  createReservation,
+  getReservation,
+  updateReservation,
+} from "@/services/reservation-service";
 
 export default function ReservationDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const { t, formatT } = useTranslation();
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,18 +51,14 @@ export default function ReservationDetailPage({
     setLoading(true);
     setError(false);
 
-    fetch(`/api/reservations/${params.id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load");
-        return res.json();
-      })
+    getReservation(id)
       .then((data) => {
         setReservation(data);
         setSelectedReservation(data);
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [params.id]);
+  }, [id]);
 
   const handleOpenReservationModal = () => {
     setIsReservationModalOpen(true);
@@ -74,22 +76,36 @@ export default function ReservationDetailPage({
     setIsInvoiceModalOpen(false);
   };
 
-  const handleSaveReservation = (data: Partial<Reservation>) => {
-    // Update the reservation
-    setReservation((prev) =>
-      prev ? ({ ...prev, ...data } as Reservation) : null
-    );
-    toast({
-      title: t("reservations.updated"),
-      description: formatT("reservations.updateSuccess", { id: params.id }),
-    });
-    handleCloseReservationModal();
+  const handleSaveReservation = async (data: Partial<Reservation>) => {
+    try {
+      let updated: Reservation;
+
+      if (reservation?.id) {
+        updated = await updateReservation(reservation.id, data);
+      } else {
+        updated = await createReservation(data);
+      }
+
+      setReservation(updated);
+      setSelectedReservation(updated);
+      toast({
+        title: t("reservations.updated"),
+        description: formatT("reservations.updateSuccess", { id: updated.id }),
+      });
+      handleCloseReservationModal();
+    } catch (error) {
+      toast({
+        title: t("common.error"),
+        description: t("reservations.saveFailed"),
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveInvoice = () => {
     toast({
       title: t("invoices.created"),
-      description: formatT("invoices.createSuccess", { id: params.id }),
+      description: formatT("invoices.createSuccess", { id: id }),
     });
     handleCloseInvoiceModal();
   };

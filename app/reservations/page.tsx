@@ -12,6 +12,14 @@ import ReservationWizard from "@/components/modals/reservation-wizard";
 import InvoiceModal from "@/components/modals/invoice-modal";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "@/lib/i18n/translation-context";
+import {
+  createReservation,
+  deleteReservation,
+  getReservations,
+  updateReservation,
+} from "@/services/reservation-service";
+import { getCurrentUser } from "@/lib/auth";
+import type { SafeUser } from "@/app/types/types";
 
 const statusColors: Record<ReservationStatus, string> = {
   pending:
@@ -22,9 +30,6 @@ const statusColors: Record<ReservationStatus, string> = {
     "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
 };
-
-// Mockowany aktualny użytkownik - w rzeczywistej aplikacji będzie pobierany z kontekstu uwierzytelniania
-const currentUser = { id: "user-1", role: "admin" };
 
 export default function ReservationsPage() {
   const { t, formatT } = useTranslation();
@@ -38,20 +43,23 @@ export default function ReservationsPage() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [currentReservation, setCurrentReservation] =
     useState<Reservation | null>(null);
+  const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/reservations")
-      .then((res) => res.json())
-      .then((data) => {
-        setReservations(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    getCurrentUser().then(setCurrentUser);
   }, []);
 
-  // Filter reservations based on search term, status, and user assignment
+  useEffect(() => {
+    getReservations()
+      .then((data) => setReservations(data))
+      .catch(() => {
+        toast({ title: t("common.error"), description: t("common.tryAgain") });
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch =
       reservation.client?.firstName
@@ -65,10 +73,10 @@ export default function ReservationsPage() {
     const matchesStatus =
       statusFilter === "all" || reservation.status === statusFilter;
 
-    // Admin widzi wszystkie rezerwacje, inni użytkownicy tylko te, do których są przypisani
     const isAssignedOrAdmin =
-      currentUser.role === "admin" ||
+      currentUser?.role === "admin" ||
       (reservation.assignedUsers &&
+        currentUser &&
         reservation.assignedUsers.includes(currentUser.id));
 
     return matchesSearch && matchesStatus && isAssignedOrAdmin;
@@ -79,9 +87,11 @@ export default function ReservationsPage() {
     setIsReservationModalOpen(true);
   };
 
-  const handleCloseReservationModal = () => {
+  const handleCloseReservationModal = async () => {
     setIsReservationModalOpen(false);
     setCurrentReservation(null);
+    const fresh = await getReservations();
+    setReservations(fresh);
   };
 
   const handleOpenInvoiceModal = (reservation: Reservation) => {
@@ -97,25 +107,26 @@ export default function ReservationsPage() {
     router.push(`/reservations/${id}`);
   };
 
-  const handleSaveReservation = (data: Partial<Reservation>) => {
-    fetch("/api/reservations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    })
-      .then((res) => res.json())
-      .then((newReservation) => {
-        setReservations((prev) => [...prev, newReservation]);
-        toast({
-          title: t("reservations.created"),
-          description: t("reservations.createSuccess"),
-        });
-      })
-      .catch(() => {
-        toast({ title: t("common.error"), description: t("common.tryAgain") });
-      });
+  const handleSaveReservation = async (data: Partial<Reservation>) => {
+    try {
+      const saved = data.id
+        ? await updateReservation(data.id, data)
+        : await createReservation(data);
 
-    handleCloseReservationModal();
+      const fresh = await getReservations();
+      setReservations(fresh);
+
+      toast({
+        title: data.id ? t("reservations.updated") : t("reservations.created"),
+        description: data.id
+          ? t("reservations.updateSuccess")
+          : t("reservations.createSuccess"),
+      });
+    } catch {
+      toast({ title: t("common.error"), description: t("common.tryAgain") });
+    } finally {
+      handleCloseReservationModal();
+    }
   };
 
   const handleSaveInvoice = (data: any) => {
@@ -128,19 +139,20 @@ export default function ReservationsPage() {
     handleCloseInvoiceModal();
   };
 
-  const handleDeleteReservation = (id: string) => {
-    if (confirm(t("reservations.confirmDelete"))) {
-      fetch(`/api/reservations/${id}`, { method: "DELETE" }).then(() => {
-        setReservations((prev) => prev.filter((res) => res.id !== id));
-        toast({
-          title: t("reservations.deleted"),
-          description: formatT("reservations.deleteSuccess", { id }),
-        });
-      });
+  const handleDeleteReservation = async (id: string) => {
+    if (!confirm(t("reservations.confirmDelete"))) return;
+
+    try {
+      await deleteReservation(id);
+      const fresh = await getReservations();
+      setReservations(fresh);
+
       toast({
         title: t("reservations.deleted"),
         description: formatT("reservations.deleteSuccess", { id }),
       });
+    } catch {
+      toast({ title: t("common.error"), description: t("common.tryAgain") });
     }
   };
 
@@ -306,9 +318,10 @@ export default function ReservationsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() =>
-                              handleDeleteReservation(reservation.id)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteReservation(reservation.id);
+                            }}
                           >
                             <Trash className="h-4 w-4" />
                           </Button>

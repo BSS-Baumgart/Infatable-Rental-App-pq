@@ -34,6 +34,7 @@ model User {
   logs AuditLog[]
 
   Reservation Reservation[] @relation("AssignedUsersToReservations")
+  cancelledReservations Reservation[] @relation("CancelledByUser")
 }
 
 model AuditLog {
@@ -129,6 +130,10 @@ model Reservation {
   assignedUsers   User[] @relation("AssignedUsersToReservations")
   invoices        Invoice[]
   documents       Document[]
+
+  cancelledAt     DateTime?
+  cancelledBy     User?                 @relation("CancelledByUser", fields: [cancelledById], references: [id])
+  cancelledById   String?
 }
 
 model ReservationAttraction {

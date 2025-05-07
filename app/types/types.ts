@@ -73,6 +73,8 @@ export interface Reservation {
   createdAt: Date;
   updatedAt: Date;
   assignedUsers: string[];
+  cancelledAt?: Date;
+  cancelledBy?: User;
 }
 
 export interface Invoice {
