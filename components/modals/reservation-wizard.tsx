@@ -196,11 +196,16 @@ export default function ReservationWizard({
     };
 
     try {
-      const response = await fetch("/api/reservations", {
-        method: reservation ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataToSave),
-      });
+      const response = await fetch(
+        reservation
+          ? `/api/reservations/${reservation.id}`
+          : "/api/reservations",
+        {
+          method: reservation ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dataToSave),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to save");
 

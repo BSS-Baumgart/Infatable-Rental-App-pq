@@ -28,11 +28,11 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { params } = context;
   const data = await req.json();
 
-  // Usuwamy stare atrakcje
   await prisma.reservationAttraction.deleteMany({
     where: { reservationId: params.id },
   });
