@@ -117,6 +117,7 @@ enum DocumentRelationType {
 
 model Reservation {
   id              String                 @id @default(uuid())
+  name    String   @unique 
   client          Client                @relation(fields: [clientId], references: [id])
   clientId        String
   attractions     ReservationAttraction[]

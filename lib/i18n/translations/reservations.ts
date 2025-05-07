@@ -1,13 +1,17 @@
-import type { TranslationRecord } from "../types"
+import type { TranslationRecord } from "../types";
 
 export const reservationsTranslations: TranslationRecord = {
   en: {
     "reservations.title": "Reservations",
+    "reservations.timeline": "Audit Log",
+    "reservations.name": "Reservation Number",
+    "reservations.reservedAttractions": "Reserved Attractions",
     "reservations.new": "New Reservation",
     "reservations.edit": "Edit Reservation",
     "reservations.view": "View Reservation",
     "reservations.delete": "Delete Reservation",
-    "reservations.confirmDelete": "Are you sure you want to delete this reservation?",
+    "reservations.confirmDelete":
+      "Are you sure you want to delete this reservation?",
     "reservations.status": "Status",
     "reservations.status.confirmed": "Confirmed",
     "reservations.status.pending": "Pending",
@@ -56,23 +60,31 @@ export const reservationsTranslations: TranslationRecord = {
     "reservations.wizard.step4": "Confirmation",
     "reservations.wizard.review": "Review Reservation",
     "reservations.wizard.complete": "Complete Reservation",
-    "reservations.noReservationsForPeriod": "No reservations found for the selected time period.",
+    "reservations.noReservationsForPeriod":
+      "No reservations found for the selected time period.",
     "reservations.unknownClient": "Unknown Client",
     "reservations.updated": "Reservation updated",
-    "reservations.updateSuccess": "Reservation #{id} has been updated successfully.",
+    "reservations.updateSuccess":
+      "Reservation #{id} has been updated successfully.",
     "reservations.created": "Reservation created",
-    "reservations.createSuccess": "New reservation has been created successfully.",
+    "reservations.createSuccess":
+      "New reservation has been created successfully.",
     "reservations.deleted": "Reservation deleted",
     "reservations.deleteSuccess": "Reservation #{id} has been deleted.",
     "reservations.filterByStatus": "Filter by Status",
     "reservations.allStatuses": "All Statuses",
     "reservations.assignedUsers": "Assigned Users",
     "reservations.selectUsers": "Select Users",
-    "reservations.assignedUsersHelp": "Selected users will have access to this reservation",
+    "reservations.assignedUsersHelp":
+      "Selected users will have access to this reservation",
     "reservations.noAssignedUsers": "No assigned users",
+    "reservations.noInvoices": "No Invoices",
   },
   pl: {
     "reservations.title": "Rezerwacje",
+    "reservations.timeline": "Historia Zmian",
+    "reservations.name": "Numer Rezerwacji",
+    "reservations.reservedAttractions": "Zarezerwowane Atrakcje",
     "reservations.new": "Nowa rezerwacja",
     "reservations.edit": "Edytuj rezerwację",
     "reservations.view": "Zobacz rezerwację",
@@ -126,19 +138,24 @@ export const reservationsTranslations: TranslationRecord = {
     "reservations.wizard.step4": "Potwierdzenie",
     "reservations.wizard.review": "Przejrzyj rezerwację",
     "reservations.wizard.complete": "Zakończ rezerwację",
-    "reservations.noReservationsForPeriod": "Nie znaleziono rezerwacji dla wybranego okresu.",
+    "reservations.noReservationsForPeriod":
+      "Nie znaleziono rezerwacji dla wybranego okresu.",
     "reservations.unknownClient": "Nieznany klient",
     "reservations.updated": "Rezerwacja zaktualizowana",
-    "reservations.updateSuccess": "Rezerwacja #{id} została pomyślnie zaktualizowana.",
+    "reservations.updateSuccess":
+      "Rezerwacja #{id} została pomyślnie zaktualizowana.",
     "reservations.created": "Rezerwacja utworzona",
-    "reservations.createSuccess": "Nowa rezerwacja została pomyślnie utworzona.",
+    "reservations.createSuccess":
+      "Nowa rezerwacja została pomyślnie utworzona.",
     "reservations.deleted": "Rezerwacja usunięta",
     "reservations.deleteSuccess": "Rezerwacja #{id} została usunięta.",
     "reservations.filterByStatus": "Filtruj według statusu",
     "reservations.allStatuses": "Wszystkie statusy",
     "reservations.assignedUsers": "Przypisani użytkownicy",
     "reservations.selectUsers": "Wybierz użytkowników",
-    "reservations.assignedUsersHelp": "Wybrani użytkownicy będą mieli dostęp do tej rezerwacji",
+    "reservations.assignedUsersHelp":
+      "Wybrani użytkownicy będą mieli dostęp do tej rezerwacji",
     "reservations.noAssignedUsers": "Brak przypisanych użytkowników",
+    "reservations.noInvoices": "Brak Faktur",
   },
-}
+};

@@ -62,6 +62,7 @@ export interface Attraction {
 
 export interface Reservation {
   id: string;
+  name: string;
   clientId: string;
   client?: Client;
   attractions: ReservationAttraction[];

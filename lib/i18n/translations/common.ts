@@ -85,6 +85,9 @@ export const commonTranslations: TranslationRecord = {
 
     // Reservation specific
     "common.selectDates": "Select Dates",
+    "common.invoices": "Invoices",
+    "reservations.timeline": "Audit Log",
+    "common.attractions": "Attractions",
     "common.startDate": "Start Date",
     "common.endDate": "End Date",
     "common.dateHelp":
@@ -276,6 +279,9 @@ export const commonTranslations: TranslationRecord = {
 
     // Reservation specific
     "common.selectDates": "Wybierz daty",
+    "common.attractions": "Atrakcje",
+    "common.invoices": "Faktury",
+    "common.timeline": "Historia Zmian",
     "common.startDate": "Data rozpoczęcia",
     "common.endDate": "Data zakończenia",
     "common.dateHelp":

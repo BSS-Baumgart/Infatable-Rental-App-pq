@@ -241,7 +241,7 @@ export default function ReservationsPage() {
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-800">
                     <th className="text-left font-medium p-2">
-                      {t("common.id")}
+                      {t("reservations.name")}
                     </th>
                     <th className="text-left font-medium p-2">
                       {t("reservations.client")}
@@ -270,7 +270,7 @@ export default function ReservationsPage() {
                       className="border-b border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                       onClick={() => handleReservationClick(reservation.id)}
                     >
-                      <td className="p-2">{reservation.id}</td>
+                      <td className="p-2">{reservation.name}</td>
                       <td className="p-2">
                         {reservation.client
                           ? `${reservation.client.firstName} ${reservation.client.lastName}`
