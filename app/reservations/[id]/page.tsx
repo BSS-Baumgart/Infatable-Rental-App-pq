@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { reservations as allReservations } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -30,8 +29,10 @@ export default function ReservationDetailPage({
 }: {
   params: { id: string };
 }) {
-  const { t } = useTranslation();
+  const { t, formatT } = useTranslation();
   const [reservation, setReservation] = useState<Reservation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,12 +42,20 @@ export default function ReservationDetailPage({
   const { toast } = useToast();
 
   useEffect(() => {
-    // Find the reservation by ID
-    const foundReservation = allReservations.find((r) => r.id === params.id);
-    if (foundReservation) {
-      setReservation(foundReservation);
-      setSelectedReservation(foundReservation);
-    }
+    setLoading(true);
+    setError(false);
+
+    fetch(`/api/reservations/${params.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load");
+        return res.json();
+      })
+      .then((data) => {
+        setReservation(data);
+        setSelectedReservation(data);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [params.id]);
 
   const handleOpenReservationModal = () => {
@@ -72,7 +81,7 @@ export default function ReservationDetailPage({
     );
     toast({
       title: t("reservations.updated"),
-      description: t("reservations.updateSuccess", { id: params.id }),
+      description: formatT("reservations.updateSuccess", { id: params.id }),
     });
     handleCloseReservationModal();
   };
@@ -80,21 +89,39 @@ export default function ReservationDetailPage({
   const handleSaveInvoice = () => {
     toast({
       title: t("invoices.created"),
-      description: t("invoices.createSuccess", { id: params.id }),
+      description: formatT("invoices.createSuccess", { id: params.id }),
     });
     handleCloseInvoiceModal();
   };
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+          {t("common.loading")}
+        </div>
+      </AppLayout>
+    );
+  }
 
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="text-center py-10 text-red-500">
+          {t("common.error")} – {t("common.tryAgain")}
+        </div>
+      </AppLayout>
+    );
+  }
   if (!reservation) {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center h-[60vh]">
           <h1 className="text-2xl font-bold mb-4">
-            {t("common.notFound", { item: t("common.reservation") })}
+            {formatT("common.notFound", { item: t("common.reservation") })}
           </h1>
           <Button onClick={() => router.push("/reservations")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {t("common.backTo", { page: t("reservations.title") })}
+            {formatT("common.backTo", { page: t("reservations.title") })}
           </Button>
         </div>
       </AppLayout>
@@ -334,8 +361,8 @@ export default function ReservationDetailPage({
                             {new Date(reservation.createdAt).toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            {t("reservations.createdWithAttractions", {
-                              count: reservation.attractions.length,
+                            {formatT("reservations.createdWithAttractions", {
+                              count: String(reservation.attractions?.length),
                             })}
                           </div>
                         </div>
@@ -369,7 +396,7 @@ export default function ReservationDetailPage({
                         </div>
                         <div>
                           <div className="font-medium">
-                            {t("reservations.statusIs", {
+                            {formatT("reservations.statusIs", {
                               status: t(
                                 `reservations.status.${reservation.status}`
                               ),

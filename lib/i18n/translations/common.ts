@@ -1,4 +1,4 @@
-import type { TranslationRecord } from "../types"
+import type { TranslationRecord } from "../types";
 
 export const commonTranslations: TranslationRecord = {
   en: {
@@ -70,6 +70,7 @@ export const commonTranslations: TranslationRecord = {
     "common.help": "Help",
     "common.helpCenter": "Help Center",
     "common.documentation": "Documentation",
+    "common.documents": "Documents",
     "common.contactSupport": "Contact Support",
     "common.userMenu": "User Menu",
     "common.remove": "Remove",
@@ -96,22 +97,28 @@ export const commonTranslations: TranslationRecord = {
     "common.firstName": "First Name",
     "common.lastName": "Last Name",
     "common.additionalNotes": "Additional Notes",
-    "common.notesPlaceholder": "Any special requirements or information we should know about...",
+    "common.notesPlaceholder":
+      "Any special requirements or information we should know about...",
     "common.confirmReservation": "Confirm Reservation",
     "common.rentalDates": "Rental Dates",
-    "common.paymentNote": "Payment will be collected upon delivery. We accept cash, credit cards, and mobile payments.",
+    "common.paymentNote":
+      "Payment will be collected upon delivery. We accept cash, credit cards, and mobile payments.",
     "common.submitting": "Submitting...",
     "common.completeReservation": "Complete Reservation",
     "common.reservationSubmitted": "Reservation Submitted!",
-    "common.thankYou": "Thank you for your reservation. We'll be in touch shortly to confirm the details.",
+    "common.thankYou":
+      "Thank you for your reservation. We'll be in touch shortly to confirm the details.",
     "common.confirmationCode": "Your confirmation code:",
     "common.emailSent": "A confirmation email has been sent to",
     "common.whatNext": "What happens next?",
     "common.step1Next":
       "Our team will review your reservation and contact you within 24 hours to confirm availability.",
-    "common.step2Next": "Once confirmed, we'll arrange delivery and setup details with you.",
-    "common.step3Next": "On the day of your event, our team will deliver and set up the attractions at your location.",
-    "common.step4Next": "After your event, we'll return to dismantle and collect the attractions.",
+    "common.step2Next":
+      "Once confirmed, we'll arrange delivery and setup details with you.",
+    "common.step3Next":
+      "On the day of your event, our team will deliver and set up the attractions at your location.",
+    "common.step4Next":
+      "After your event, we'll return to dismantle and collect the attractions.",
     "common.returnHome": "Return to Home",
 
     // Navigation
@@ -132,7 +139,6 @@ export const commonTranslations: TranslationRecord = {
     "nav.home": "Home",
     "nav.bookNow": "Book Now",
     "nav.howItWorks": "How It Works",
-    "nav.attractions": "Attractions",
 
     // Sidebar
     "sidebar.dashboard": "Dashboard",
@@ -255,6 +261,7 @@ export const commonTranslations: TranslationRecord = {
     "common.help": "Pomoc",
     "common.helpCenter": "Centrum pomocy",
     "common.documentation": "Dokumentacja",
+    "common.documents": "Dokumenty",
     "common.contactSupport": "Kontakt z pomocą",
     "common.userMenu": "Menu użytkownika",
     "common.remove": "Usuń",
@@ -281,7 +288,8 @@ export const commonTranslations: TranslationRecord = {
     "common.firstName": "Imię",
     "common.lastName": "Nazwisko",
     "common.additionalNotes": "Dodatkowe uwagi",
-    "common.notesPlaceholder": "Wszelkie specjalne wymagania lub informacje, które powinniśmy znać...",
+    "common.notesPlaceholder":
+      "Wszelkie specjalne wymagania lub informacje, które powinniśmy znać...",
     "common.confirmReservation": "Potwierdź rezerwację",
     "common.rentalDates": "Daty wynajmu",
     "common.paymentNote":
@@ -289,15 +297,19 @@ export const commonTranslations: TranslationRecord = {
     "common.submitting": "Wysyłanie...",
     "common.completeReservation": "Zakończ rezerwację",
     "common.reservationSubmitted": "Rezerwacja wysłana!",
-    "common.thankYou": "Dziękujemy za rezerwację. Wkrótce skontaktujemy się z Tobą, aby potwierdzić szczegóły.",
+    "common.thankYou":
+      "Dziękujemy za rezerwację. Wkrótce skontaktujemy się z Tobą, aby potwierdzić szczegóły.",
     "common.confirmationCode": "Twój kod potwierdzenia:",
     "common.emailSent": "E-mail z potwierdzeniem został wysłany na adres",
     "common.whatNext": "Co dalej?",
     "common.step1Next":
       "Nasz zespół przejrzy Twoją rezerwację i skontaktuje się z Tobą w ciągu 24 godzin, aby potwierdzić dostępność.",
-    "common.step2Next": "Po potwierdzeniu ustalimy z Tobą szczegóły dostawy i montażu.",
-    "common.step3Next": "W dniu Twojego wydarzenia nasz zespół dostarczy i zainstaluje atrakcje w wybranym miejscu.",
-    "common.step4Next": "Po zakończeniu wydarzenia wrócimy, aby zdemontować i odebrać atrakcje.",
+    "common.step2Next":
+      "Po potwierdzeniu ustalimy z Tobą szczegóły dostawy i montażu.",
+    "common.step3Next":
+      "W dniu Twojego wydarzenia nasz zespół dostarczy i zainstaluje atrakcje w wybranym miejscu.",
+    "common.step4Next":
+      "Po zakończeniu wydarzenia wrócimy, aby zdemontować i odebrać atrakcje.",
     "common.returnHome": "Powrót do strony głównej",
 
     // Navigation
@@ -318,7 +330,6 @@ export const commonTranslations: TranslationRecord = {
     "nav.home": "Strona główna",
     "nav.bookNow": "Zarezerwuj teraz",
     "nav.howItWorks": "Jak to działa",
-    "nav.attractions": "Atrakcje",
 
     // Sidebar
     "sidebar.dashboard": "Panel główny",
@@ -372,4 +383,4 @@ export const commonTranslations: TranslationRecord = {
     "timePeriod.last365Days": "Ostatnie 365 dni",
     "timePeriod.timeRange": "Zakres czasu",
   },
-}
+};

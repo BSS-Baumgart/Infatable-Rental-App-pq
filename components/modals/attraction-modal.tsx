@@ -208,13 +208,33 @@ export default function AttractionModal({
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <Label htmlFor="image">{t("attractions.imageUrl")}</Label>
+                {formData.image && (
+                  <img
+                    src={formData.image}
+                    alt="Podgląd"
+                    className="mt-2 h-32 object-contain border rounded"
+                  />
+                )}
                 <Input
                   id="image"
                   name="image"
-                  type="text"
-                  value={formData.image || ""}
-                  onChange={handleChange}
-                  placeholder="/bouncy-castle.png"
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    const formDataUpload = new FormData();
+                    formDataUpload.append("file", file);
+
+                    const res = await fetch("/api/upload", {
+                      method: "POST",
+                      body: formDataUpload,
+                    });
+
+                    const data = await res.json();
+                    setFormData((prev) => ({ ...prev, image: data.url }));
+                  }}
                 />
               </div>
             </div>

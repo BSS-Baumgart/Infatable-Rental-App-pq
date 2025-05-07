@@ -100,3 +100,24 @@ export const DELETE = async (
     }
   })(req, context);
 };
+
+export async function GET(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  try {
+    const attraction = await prisma.attraction.findUnique({
+      where: { id },
+    });
+
+    if (!attraction) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(attraction);
+  } catch (error) {
+    return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
+  }
+}

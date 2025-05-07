@@ -134,7 +134,7 @@ export default function AttractionsPage() {
                   }
                   alt={attraction.name}
                   fill
-                  className="object-cover"
+                  className="object-contain rounded-md bg-gray-100"
                 />
               </div>
               <CardHeader>

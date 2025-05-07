@@ -1,10 +1,10 @@
-import type { Language } from "../types"
+import type { Language } from "../types";
 
 type DocumentsTranslations = {
   [key in Language]?: {
-    [key: string]: string
-  }
-}
+    [key: string]: string;
+  };
+};
 
 export const documentsTranslations: DocumentsTranslations = {
   en: {
@@ -22,12 +22,12 @@ export const documentsTranslations: DocumentsTranslations = {
     "documents.name": "Name",
     "documents.type": "Type",
     "documents.size": "Size",
-    "documents.uploaded": "Uploaded",
     "documents.related.to": "Related To",
     "documents.actions": "Actions",
     "documents.none": "None",
     "documents.delete.confirm": "Are you sure?",
-    "documents.delete.warning": 'This will permanently delete the document "{name}". This action cannot be undone.',
+    "documents.delete.warning":
+      'This will permanently delete the document "{name}". This action cannot be undone.',
     "documents.delete": "Delete",
     "documents.cancel": "Cancel",
     "documents.download.started": "Download started",
@@ -75,12 +75,12 @@ export const documentsTranslations: DocumentsTranslations = {
     "documents.name": "Nazwa",
     "documents.type": "Typ",
     "documents.size": "Rozmiar",
-    "documents.uploaded": "Wgrano",
     "documents.related.to": "Powiązany z",
     "documents.actions": "Akcje",
     "documents.none": "Brak",
     "documents.delete.confirm": "Czy jesteś pewien?",
-    "documents.delete.warning": 'Spowoduje to trwałe usunięcie dokumentu "{name}". Tej akcji nie można cofnąć.',
+    "documents.delete.warning":
+      'Spowoduje to trwałe usunięcie dokumentu "{name}". Tej akcji nie można cofnąć.',
     "documents.delete": "Usuń",
     "documents.cancel": "Anuluj",
     "documents.download.started": "Rozpoczęto pobieranie",
@@ -113,4 +113,4 @@ export const documentsTranslations: DocumentsTranslations = {
     "documents.related.attraction": "Atrakcja",
     "documents.related.reservation": "Rezerwacja",
   },
-}
+};

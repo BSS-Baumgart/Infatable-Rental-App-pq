@@ -24,6 +24,15 @@ export interface User {
   avatar?: string;
 }
 
+export type SafeUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+  // createdAt: string;
+};
+
 export interface Client {
   id: string;
   firstName: string;
@@ -63,7 +72,7 @@ export interface Reservation {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
-  assignedUsers: string[]; // Dodane pole - tablica ID użytkowników przypisanych do rezerwacji
+  assignedUsers: string[];
 }
 
 export interface Invoice {

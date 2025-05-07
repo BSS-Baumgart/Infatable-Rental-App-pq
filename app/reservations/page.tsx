@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { reservations as initialReservations, clients } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Eye, Plus, Search, Trash, FileText } from "lucide-react";
@@ -28,19 +27,29 @@ const statusColors: Record<ReservationStatus, string> = {
 const currentUser = { id: "user-1", role: "admin" };
 
 export default function ReservationsPage() {
-  const { t } = useTranslation();
+  const { t, formatT } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "all">(
     "all"
   );
-  const [reservations, setReservations] =
-    useState<Reservation[]>(initialReservations);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [currentReservation, setCurrentReservation] =
     useState<Reservation | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/reservations")
+      .then((res) => res.json())
+      .then((data) => {
+        setReservations(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   // Filter reservations based on search term, status, and user assignment
   const filteredReservations = reservations.filter((reservation) => {
@@ -89,66 +98,48 @@ export default function ReservationsPage() {
   };
 
   const handleSaveReservation = (data: Partial<Reservation>) => {
-    if (currentReservation) {
-      // Update existing reservation
-      setReservations((prev) =>
-        prev.map((res) =>
-          res.id === currentReservation.id
-            ? ({ ...res, ...data } as Reservation)
-            : res
-        )
-      );
-      toast({
-        title: t("reservations.updated"),
-        description: t("reservations.updateSuccess", {
-          id: currentReservation.id,
-        }),
+    fetch("/api/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((newReservation) => {
+        setReservations((prev) => [...prev, newReservation]);
+        toast({
+          title: t("reservations.created"),
+          description: t("reservations.createSuccess"),
+        });
+      })
+      .catch(() => {
+        toast({ title: t("common.error"), description: t("common.tryAgain") });
       });
-    } else {
-      // Create new reservation
-      // Make sure we have the client object from the clients array
-      const clientObj = data.clientId
-        ? clients.find((c) => c.id === data.clientId)
-        : null;
 
-      // Ensure current user is assigned to the reservation if not already
-      const assignedUsers = data.assignedUsers || [];
-      if (!assignedUsers.includes(currentUser.id)) {
-        assignedUsers.push(currentUser.id);
-      }
-
-      const newReservation = {
-        ...data,
-        id: `RES-${Math.floor(Math.random() * 10000)}`,
-        client: clientObj, // Ensure client object is included
-        assignedUsers, // Add assigned users
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Reservation;
-
-      setReservations((prev) => [...prev, newReservation]);
-      toast({
-        title: t("reservations.created"),
-        description: t("reservations.createSuccess"),
-      });
-    }
     handleCloseReservationModal();
   };
 
   const handleSaveInvoice = (data: any) => {
     toast({
       title: t("invoices.created"),
-      description: t("invoices.createSuccess", { id: currentReservation?.id }),
+      description: formatT("invoices.createSuccess", {
+        id: currentReservation?.id,
+      }),
     });
     handleCloseInvoiceModal();
   };
 
   const handleDeleteReservation = (id: string) => {
     if (confirm(t("reservations.confirmDelete"))) {
-      setReservations((prev) => prev.filter((res) => res.id !== id));
+      fetch(`/api/reservations/${id}`, { method: "DELETE" }).then(() => {
+        setReservations((prev) => prev.filter((res) => res.id !== id));
+        toast({
+          title: t("reservations.deleted"),
+          description: formatT("reservations.deleteSuccess", { id }),
+        });
+      });
       toast({
         title: t("reservations.deleted"),
-        description: t("reservations.deleteSuccess", { id }),
+        description: formatT("reservations.deleteSuccess", { id }),
       });
     }
   };
@@ -156,6 +147,16 @@ export default function ReservationsPage() {
   const handleReservationClick = (id: string) => {
     router.push(`/reservations/${id}`);
   };
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+          {t("common.loading")}
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

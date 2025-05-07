@@ -3,12 +3,6 @@
 import { useState, useEffect, use } from "react";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  attractions as allAttractions,
-  reservations as allReservations,
-  maintenanceRecords as allMaintenanceRecords,
-  documents as allDocuments,
-} from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -40,6 +34,12 @@ import MaintenanceModal from "@/components/modals/maintenance-modal";
 import DocumentModal from "@/components/modals/document-modal";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "@/lib/i18n/translation-context";
+import {
+  getAttractionById,
+  getDocumentsByAttractionId,
+  getMaintenanceRecordsByAttractionId,
+  getReservationsByAttractionId,
+} from "@/services/attractions-service";
 
 export default function AttractionDetailPageClient({ id }: { id: string }) {
   const router = useRouter();
@@ -64,29 +64,31 @@ export default function AttractionDetailPageClient({ id }: { id: string }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Find the attraction by ID
-    const foundAttraction = allAttractions.find((a) => a.id === id);
-    if (foundAttraction) {
-      setAttraction(foundAttraction);
+    const fetchData = async () => {
+      try {
+        const [fetchedAttraction, reservations, maintenance, docs] =
+          await Promise.all([
+            getAttractionById(id),
+            getReservationsByAttractionId(id),
+            getMaintenanceRecordsByAttractionId(id),
+            getDocumentsByAttractionId(id),
+          ]);
 
-      // Find reservations that include this attraction
-      const reservations = allReservations.filter((r) =>
-        r.attractions.some((a) => a.attractionId === id)
-      );
-      setRelatedReservations(reservations);
+        setAttraction(fetchedAttraction);
+        setRelatedReservations(reservations);
+        setMaintenanceRecords(maintenance);
+        setDocuments(docs);
+      } catch (error) {
+        console.error("Błąd ładowania danych atrakcji:", error);
+        toast({
+          variant: "destructive",
+          title: t("common.error"),
+          description: t("attractions.fetchError"),
+        });
+      }
+    };
 
-      // Find maintenance records for this attraction
-      const records = allMaintenanceRecords.filter(
-        (r) => r.attractionId === id
-      );
-      setMaintenanceRecords(records);
-
-      // Find documents for this attraction
-      const docs = allDocuments.filter(
-        (d) => d.relatedTo?.type === "attraction" && d.relatedTo.id === id
-      );
-      setDocuments(docs);
-    }
+    fetchData();
   }, [id]);
 
   const handleOpenAttractionModal = () => {
@@ -274,9 +276,9 @@ export default function AttractionDetailPageClient({ id }: { id: string }) {
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     <span className="font-medium">
-                      {t("attractionDetails.id")}:
+                      {t("attractionDetails.name")}:
                     </span>
-                    <span>{attraction.id}</span>
+                    <span>{attraction.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />

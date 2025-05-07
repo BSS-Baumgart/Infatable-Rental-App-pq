@@ -32,6 +32,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   logs AuditLog[]
+
+  Reservation Reservation[] @relation("AssignedUsersToReservations")
 }
 
 model AuditLog {
@@ -57,6 +59,10 @@ model Client {
   city           String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  Reservation Reservation[]
+
+  Invoice Invoice[]
 }
 
 model Attraction {
@@ -73,6 +79,10 @@ model Attraction {
   maintenanceRecords  MaintenanceRecord[]
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
+
+  ReservationAttraction ReservationAttraction[]
+
+  Document Document[] @relation(map: "DocumentAttraction")
 }
 
 model MaintenanceRecord {
@@ -87,3 +97,73 @@ model MaintenanceRecord {
   createdAt    DateTime @default(now())
 }
 
+enum ReservationStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum InvoiceStatus {
+  paid
+  unpaid
+}
+
+enum DocumentRelationType {
+  attraction
+  reservation
+}
+
+model Reservation {
+  id              String                 @id @default(uuid())
+  client          Client                @relation(fields: [clientId], references: [id])
+  clientId        String
+  attractions     ReservationAttraction[]
+  status          ReservationStatus
+  startDate       DateTime
+  endDate         DateTime
+  totalPrice      Float
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  assignedUsers   User[] @relation("AssignedUsersToReservations")
+  invoices        Invoice[]
+  documents       Document[]
+}
+
+model ReservationAttraction {
+  id            String      @id @default(uuid())
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservationId String
+  attraction    Attraction  @relation(fields: [attractionId], references: [id])
+  attractionId  String
+  quantity      Int
+}
+
+model Invoice {
+  id            String      @id @default(uuid())
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservationId String
+  client        Client?     @relation(fields: [clientId], references: [id])
+  clientId      String?
+  issueDate     DateTime
+  dueDate       DateTime
+  amount        Float
+  status        InvoiceStatus
+  pdfUrl        String?
+}
+
+model Document {
+  id            String               @id @default(uuid())
+  name          String
+  type          String
+  size          Int
+  url           String
+  uploadedAt    DateTime             @default(now())
+  relatedType   DocumentRelationType
+  relatedId     String
+  description   String?
+
+  attraction    Attraction?         @relation(fields: [relatedId], references: [id], onDelete: Cascade, map: "DocumentAttraction")
+  reservation   Reservation?        @relation(fields: [relatedId], references: [id], onDelete: Cascade, map: "DocumentReservation")
+}
