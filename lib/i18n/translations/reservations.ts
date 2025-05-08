@@ -95,7 +95,7 @@ export const reservationsTranslations: TranslationRecord = {
     "reservations.status.pending": "Oczekująca",
     "reservations.status.cancelled": "Anulowana",
     "reservations.status.completed": "Zakończona",
-    "reservations.status.in-progress": "W trakcie",
+    "reservations.status.in_progress": "W trakcie",
     "reservations.date": "Data",
     "reservations.time": "Czas",
     "reservations.client": "Klient",
