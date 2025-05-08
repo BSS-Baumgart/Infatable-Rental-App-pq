@@ -65,7 +65,7 @@ export default function ReservationWizard({
   onSave,
   initialDate,
 }: ReservationWizardProps) {
-  const { t, formatT } = useTranslation();
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [clients, setClients] = useState<Client[]>([]);
   const [allAttractions, setAllAttractions] = useState<Attraction[]>([]);

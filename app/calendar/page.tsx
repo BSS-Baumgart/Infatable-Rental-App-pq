@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { reservations } from "@/lib/mock-data";
+import { getReservations } from "@/services/reservation-service";
 import { Badge } from "@/components/ui/badge";
 import {
   Calendar,
@@ -27,7 +27,7 @@ import { useTranslation } from "@/lib/i18n/translation-context";
 const statusColors: Record<ReservationStatus, string> = {
   pending:
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  "in-progress":
+  in_progress:
     "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   completed:
     "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
@@ -37,9 +37,10 @@ const statusColors: Record<ReservationStatus, string> = {
 type CalendarView = "month" | "list";
 
 export default function CalendarPage() {
-  const { t } = useTranslation();
+  const { t, formatT } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [currentReservation, setCurrentReservation] =
     useState<Reservation | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -48,37 +49,40 @@ export default function CalendarPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
 
-  // Set default view based on screen size
   useEffect(() => {
     setView(isMobile ? "list" : "month");
   }, [isMobile]);
 
-  // Get current month and year
+  useEffect(() => {
+    getReservations()
+      .then(setReservations)
+      .catch(() =>
+        toast({
+          title: t("common.error"),
+          description: t("common.tryAgain"),
+        })
+      );
+  }, []);
+
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
 
-  // Get first day of the month
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-  const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const firstDayOfWeek = firstDayOfMonth.getDay();
 
-  // Get last day of the month
   const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
   const daysInMonth = lastDayOfMonth.getDate();
 
-  // Create array of days for the calendar
   const days = [];
 
-  // Add empty cells for days before the first day of the month
   for (let i = 0; i < firstDayOfWeek; i++) {
     days.push(null);
   }
 
-  // Add days of the month
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(new Date(currentYear, currentMonth, i));
   }
 
-  // Get reservations for the current month
   const monthReservations = reservations.filter((reservation) => {
     const startDate = new Date(reservation.startDate);
     return (
@@ -87,7 +91,6 @@ export default function CalendarPage() {
     );
   });
 
-  // Group reservations by day
   const reservationsByDay = monthReservations.reduce((acc, reservation) => {
     const startDate = new Date(reservation.startDate);
     const day = startDate.getDate();
@@ -159,7 +162,7 @@ export default function CalendarPage() {
         ? t("reservations.updated")
         : t("reservations.created"),
       description: currentReservation
-        ? t("reservations.updateSuccess", { id: currentReservation?.id })
+        ? formatT("reservations.updateSuccess", { id: currentReservation?.id })
         : t("reservations.createSuccess"),
     });
     handleCloseModal();
@@ -301,7 +304,9 @@ export default function CalendarPage() {
                                   } w-full justify-between`}
                                 >
                                   <span className="truncate">
-                                    {reservation.client.lastName}
+                                    {reservation.client?.firstName +
+                                      " " +
+                                      reservation.client?.lastName}
                                   </span>
                                   <span className="ml-1">
                                     ${reservation.totalPrice}
@@ -348,12 +353,12 @@ export default function CalendarPage() {
                               <div className="flex items-center justify-between">
                                 <div>
                                   <div className="font-medium">
-                                    {reservation.client.firstName}{" "}
-                                    {reservation.client.lastName}
+                                    {reservation.client?.firstName}{" "}
+                                    {reservation.client?.lastName}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
                                     {reservation.attractions
-                                      .map((a) => a.name)
+                                      .map((a) => a.attraction.name)
                                       .join(", ")}
                                   </div>
                                 </div>
