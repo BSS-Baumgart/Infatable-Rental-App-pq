@@ -1,8 +1,8 @@
 "use client";
 
 import type React from "react";
-import { SafeUser } from "@/app/types/types";
-import { useState, useEffect } from "react";
+import type { SafeUser } from "@/app/types/types";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +24,14 @@ import { Badge } from "@/components/ui/badge";
 import {
   X,
   Plus,
-  User as UserIcon,
+  UserIcon,
   Package,
   FileText,
   ChevronRight,
   ChevronLeft,
   Search,
+  Calendar,
+  Info,
 } from "lucide-react";
 import type {
   ReservationStatus,
@@ -41,14 +43,17 @@ import ClientModal from "./client-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth";
 import DatePicker from "react-datepicker";
-
-import {
-  createReservation,
-  updateReservation,
-} from "@/services/reservation-service";
+import "react-datepicker/dist/react-datepicker.css";
 import { useTranslation } from "@/lib/i18n/translation-context";
 import { RESERVATION_STATUSES } from "@/app/constants/arrays";
 import { createClient } from "@/services/clients-service";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ReservationWizardProps {
   isOpen: boolean;
@@ -57,6 +62,21 @@ interface ReservationWizardProps {
   onSave: (reservation: Partial<ReservationType>) => void;
   initialDate?: Date | null;
 }
+
+type DayOption = "full-day" | "morning" | "afternoon";
+
+// Stała reprezentująca siedzibę firmy (można przenieść do konfiguracji)
+const COMPANY_LOCATION = {
+  city: "Warszawa",
+  postalCode: "00-001",
+  street: "Marszałkowska",
+  buildingNumber: "1",
+};
+
+// Stałe do obliczania kosztów transportu
+const TRANSPORT_COST_PER_KM = 2;
+const FREE_KM_ONE_WAY = 20;
+const TOTAL_TRIPS = 4;
 
 export default function ReservationWizard({
   isOpen,
@@ -76,40 +96,127 @@ export default function ReservationWizard({
   const [formData, setFormData] = useState<Partial<ReservationType>>({});
   const [selectedAttractionId, setSelectedAttractionId] = useState<string>("");
   const [dateError, setDateError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dayOption, setDayOption] = useState<DayOption>("full-day");
+  const [transportDistance, setTransportDistance] = useState<number>(0);
+  const [transportCost, setTransportCost] = useState<number>(0);
+  const datePickerRef = useRef<HTMLDivElement>(null);
 
+  // Obsługa kliknięcia poza datepickerem
   useEffect(() => {
-    if (formData.startDate && formData.endDate) {
-      if (formData.endDate < formData.startDate) {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(event.target as Node)
+      ) {
+        setShowDatePicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Ustawienie godzin na podstawie wybranej opcji dnia
+  useEffect(() => {
+    if (dateRange[0] && dateRange[1]) {
+      const startDate = new Date(dateRange[0]);
+      const endDate = new Date(dateRange[1]);
+
+      // Ustawienie godzin na podstawie opcji dnia
+      if (dayOption === "full-day") {
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+      } else if (dayOption === "morning") {
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(12, 0, 0, 0);
+      } else if (dayOption === "afternoon") {
+        startDate.setHours(12, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+      }
+
+      if (endDate < startDate) {
         setDateError("End date cannot be before start date.");
       } else {
         setDateError(null);
+
+        // Używamy funkcyjnej formy setState i sprawdzamy, czy daty się zmieniły
+        setFormData((prev) => {
+          // Sprawdzamy, czy daty są takie same jak poprzednio
+          if (
+            prev.startDate?.getTime() === startDate.getTime() &&
+            prev.endDate?.getTime() === endDate.getTime()
+          ) {
+            return prev;
+          }
+          return {
+            ...prev,
+            startDate: startDate,
+            endDate: endDate,
+          };
+        });
+
+        // Aktualizujemy dateRange tylko jeśli daty się zmieniły
+        if (
+          dateRange[0]?.getTime() !== startDate.getTime() ||
+          dateRange[1]?.getTime() !== endDate.getTime()
+        ) {
+          setDateRange([startDate, endDate]);
+        }
       }
     }
-  }, [formData.startDate, formData.endDate]);
+  }, [dayOption, dateRange[0], dateRange[1]]);
 
   useEffect(() => {
     getCurrentUser().then((user) => {
       setCurrentUser(user);
 
       if (reservation) {
+        const startDate = new Date(reservation.startDate);
+        const endDate = new Date(reservation.endDate);
+
+        // Określenie opcji dnia na podstawie godzin
+        let option: DayOption = "full-day";
+        if (startDate.getHours() === 0 && endDate.getHours() === 12) {
+          option = "morning";
+        } else if (startDate.getHours() === 12 && endDate.getHours() === 23) {
+          option = "afternoon";
+        }
+
+        setDayOption(option);
+        setDateRange([startDate, endDate]);
+
         setFormData({
           id: reservation.id,
           clientId: reservation.clientId,
           attractions: [...reservation.attractions],
           status: reservation.status,
-          startDate: new Date(reservation.startDate),
-          endDate: new Date(reservation.endDate),
+          startDate,
+          endDate,
           totalPrice: reservation.totalPrice,
           notes: reservation.notes || "",
           assignedUsers: reservation.assignedUsers || [],
         });
       } else {
+        const date = initialDate || new Date();
+        date.setHours(0, 0, 0, 0);
+        const endDate = new Date(date);
+        endDate.setHours(23, 59, 59, 999);
+
+        setDateRange([date, endDate]);
+        setDayOption("full-day");
+
         setFormData({
           clientId: "",
           attractions: [],
           status: "pending",
-          startDate: initialDate || new Date(),
-          endDate: initialDate || new Date(),
+          startDate: date,
+          endDate: endDate,
           totalPrice: 0,
           notes: "",
           assignedUsers: user?.id ? [user.id] : [],
@@ -135,25 +242,72 @@ export default function ReservationWizard({
           reservationsRes.json(),
         ]);
 
-      setClients(clientsData);
-      setAllAttractions(attractionsData);
-      setAllReservations(reservationsData);
+      setClients(clientsData.data || clientsData);
+      setAllAttractions(attractionsData.data || attractionsData);
+      setAllReservations(reservationsData.data || reservationsData);
     };
 
     fetchInitialData();
   }, []);
 
+  // Obliczanie kosztów transportu gdy zmienia się klient
+  useEffect(() => {
+    if (formData.clientId) {
+      const selectedClient = clients.find((c) => c.id === formData.clientId);
+      if (selectedClient) {
+        // Tutaj w przyszłości będzie integracja z Google Maps API
+        // Na razie symulujemy obliczanie odległości
+        const distance = calculateDistance(COMPANY_LOCATION, selectedClient);
+
+        // Aktualizujemy tylko jeśli odległość się zmieniła
+        if (transportDistance !== distance) {
+          setTransportDistance(distance);
+        }
+
+        // Obliczanie kosztu transportu
+        // 4 przejazdy (zawieźć, wrócić, jechać zwinąć, wrócić)
+        // 20 km gratis w każdą stronę
+        const totalDistance = distance * TOTAL_TRIPS;
+        const freeDistance = (FREE_KM_ONE_WAY * TOTAL_TRIPS) / 2; // Darmowe kilometry (w obie strony)
+        const paidDistance = Math.max(0, totalDistance - freeDistance);
+        const cost = paidDistance * TRANSPORT_COST_PER_KM;
+
+        // Aktualizujemy tylko jeśli koszt się zmienił
+        if (transportCost !== cost) {
+          setTransportCost(cost);
+        }
+      }
+    }
+  }, [formData.clientId, clients]);
+
+  // Aktualizacja całkowitej ceny z uwzględnieniem transportu
   useEffect(() => {
     if (formData.attractions && formData.attractions.length > 0) {
-      const total = formData.attractions.reduce(
-        (sum, item) => sum + item.attraction.price,
+      const attractionsTotal = formData.attractions.reduce(
+        (sum, item) => sum + Number(item.attraction.price),
         0
       );
-      setFormData((prev) => ({ ...prev, totalPrice: total }));
+      // Używamy funkcyjnej formy setState, aby uniknąć zależności od poprzedniego stanu
+      setFormData((prev) => {
+        // Sprawdzamy, czy cena się zmieniła, aby uniknąć niepotrzebnych aktualizacji
+        const newTotal = attractionsTotal + transportCost;
+        if (prev.totalPrice === newTotal) return prev;
+        return {
+          ...prev,
+          totalPrice: newTotal,
+        };
+      });
     } else {
-      setFormData((prev) => ({ ...prev, totalPrice: 0 }));
+      setFormData((prev) => {
+        // Sprawdzamy, czy cena się zmieniła, aby uniknąć niepotrzebnych aktualizacji
+        if (prev.totalPrice === transportCost) return prev;
+        return {
+          ...prev,
+          totalPrice: transportCost,
+        };
+      });
     }
-  }, [formData.attractions]);
+  }, [formData.attractions, transportCost]);
 
   const filteredClients = clients.filter(
     (client) =>
@@ -203,6 +357,8 @@ export default function ReservationWizard({
       assignedUsers: (formData.assignedUsers || []).map((u: any) =>
         typeof u === "string" ? u : u.id
       ),
+      transportCost: transportCost,
+      transportDistance: transportDistance,
     };
 
     try {
@@ -255,29 +411,70 @@ export default function ReservationWizard({
 
   const currentReservation = reservation;
 
+  // Funkcja sprawdzająca dostępność atrakcji z uwzględnieniem opcji pół dnia
   const isAttractionAvailable = (
     attractionId: string,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
+    option?: DayOption
   ) => {
     if (!startDate || !endDate) return true;
+
+    const checkOption = option || dayOption;
 
     const attractionReservations = allReservations.filter((res) =>
       res.attractions.some((att) => att.attractionId === attractionId)
     );
 
     for (const res of attractionReservations) {
+      // Pomijamy bieżącą rezerwację przy edycji
+      if (currentReservation && res.id === currentReservation.id) continue;
+
       const resStart = new Date(res.startDate);
       const resEnd = new Date(res.endDate);
 
-      if (currentReservation && res.id === currentReservation.id) continue;
+      // Sprawdzamy czy daty się pokrywają
+      if (startDate.toDateString() === resStart.toDateString()) {
+        // Sprawdzamy opcje dnia
+        const resOption = getReservationDayOption(resStart, resEnd);
 
-      if (startDate <= resEnd && endDate >= resStart) {
+        // Jeśli obie rezerwacje są na cały dzień lub na tę samą porę dnia, to atrakcja jest niedostępna
+        if (
+          checkOption === "full-day" ||
+          resOption === "full-day" ||
+          checkOption === resOption
+        ) {
+          return false;
+        }
+      }
+      // Dla różnych dat sprawdzamy standardowo czy zakresy się nakładają
+      else if (startDate <= resEnd && endDate >= resStart) {
         return false;
       }
     }
 
     return true;
+  };
+
+  // Funkcja określająca opcję dnia na podstawie godzin rezerwacji
+  const getReservationDayOption = (
+    startDate: Date,
+    endDate: Date
+  ): DayOption => {
+    if (startDate.getHours() === 0 && endDate.getHours() === 12) {
+      return "morning";
+    } else if (startDate.getHours() === 12 && endDate.getHours() === 23) {
+      return "afternoon";
+    }
+    return "full-day";
+  };
+
+  // Symulacja obliczania odległości między lokalizacjami
+  // W przyszłości zastąpić integracją z Google Maps API
+  const calculateDistance = (location1: any, location2: any): number => {
+    // Prosta symulacja - w rzeczywistości użylibyśmy Google Maps API
+    // Zwracamy losową wartość między 10 a 100 km
+    return Math.floor(Math.random() * 90) + 10;
   };
 
   const handleAddAttraction = (attractionId: string) => {
@@ -300,6 +497,69 @@ export default function ReservationWizard({
     setSelectedAttractionId("");
   };
 
+  // Obsługa wyboru daty
+  const handleDateChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+
+    if (start && end) {
+      // Zachowaj opcję dnia (cały dzień, rano, popołudnie)
+      const newStart = new Date(start);
+      const newEnd = new Date(end || start);
+
+      // Ustaw godziny zgodnie z wybraną opcją
+      if (dayOption === "full-day") {
+        newStart.setHours(0, 0, 0, 0);
+        newEnd.setHours(23, 59, 59, 999);
+      } else if (dayOption === "morning") {
+        newStart.setHours(0, 0, 0, 0);
+        newEnd.setHours(12, 0, 0, 0);
+      } else if (dayOption === "afternoon") {
+        newStart.setHours(12, 0, 0, 0);
+        newEnd.setHours(23, 59, 59, 999);
+      }
+
+      setDateRange([newStart, newEnd]);
+    } else {
+      setDateRange([start, end]);
+    }
+  };
+
+  // Format date range for display
+  const formatDateRange = () => {
+    if (!dateRange[0]) return "Select date range";
+
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString("pl-PL", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    };
+
+    const startDate = formatDate(dateRange[0]);
+    const endDate = dateRange[1] ? formatDate(dateRange[1]) : startDate;
+
+    let timeInfo = "";
+    if (dayOption === "full-day") {
+      timeInfo = "Cały dzień";
+    } else if (dayOption === "morning") {
+      timeInfo = "Rano (do 12:00)";
+    } else if (dayOption === "afternoon") {
+      timeInfo = "Popołudnie (od 12:00)";
+    }
+
+    if (startDate === endDate) {
+      return `${startDate} - ${timeInfo}`;
+    }
+
+    return `${startDate} - ${endDate} - ${timeInfo}`;
+  };
+
+  // Obsługa zmiany opcji dnia
+  const handleDayOptionChange = (value: DayOption) => {
+    setDayOption(value);
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -311,76 +571,64 @@ export default function ReservationWizard({
           </DialogHeader>
 
           <div className="py-4">
-            {/* Stepper - Updated with rounded design */}
+            {/* Stepper - Improved with rounded design */}
             <div className="mb-8">
-              <div className="flex justify-between">
-                <div
-                  className={`flex flex-col items-center ${
-                    step >= 1
-                      ? "text-primary"
-                      : "text-gray-400 dark:text-gray-600"
-                  }`}
-                >
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-colors ${
                       step >= 1
-                        ? "bg-primary text-white"
-                        : "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+                        ? "bg-orange-500 text-white"
+                        : "bg-gray-200 dark:bg-gray-800 text-gray-500"
                     }`}
                   >
                     <UserIcon className="h-5 w-5" />
                   </div>
-                  <span className="text-xs">Client</span>
+                  <span className="text-xs font-medium mt-1">Client</span>
                 </div>
-                <div className="flex-1 flex items-center justify-center">
+
+                <div className="flex-1 relative mx-2">
+                  <div className="h-1 w-full bg-gray-200 dark:bg-gray-800 absolute top-[22px]"></div>
                   <div
-                    className={`h-1 w-full ${
-                      step > 1 ? "bg-primary" : "bg-gray-200 dark:bg-gray-800"
-                    } transition-colors duration-300 rounded-full`}
+                    className={`h-1 bg-orange-500 absolute top-[22px] transition-all duration-300 ${
+                      step >= 2 ? "w-full" : "w-0"
+                    }`}
                   ></div>
                 </div>
-                <div
-                  className={`flex flex-col items-center ${
-                    step >= 2
-                      ? "text-primary"
-                      : "text-gray-400 dark:text-gray-600"
-                  }`}
-                >
+
+                <div className="flex flex-col items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-colors ${
                       step >= 2
-                        ? "bg-primary text-white"
-                        : "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+                        ? "bg-orange-500 text-white"
+                        : "bg-gray-200 dark:bg-gray-800 text-gray-500"
                     }`}
                   >
                     <Package className="h-5 w-5" />
                   </div>
-                  <span className="text-xs">Attractions</span>
+                  <span className="text-xs font-medium mt-1">Attractions</span>
                 </div>
-                <div className="flex-1 flex items-center justify-center">
+
+                <div className="flex-1 relative mx-2">
+                  <div className="h-1 w-full bg-gray-200 dark:bg-gray-800 absolute top-[22px]"></div>
                   <div
-                    className={`h-1 w-full ${
-                      step > 2 ? "bg-primary" : "bg-gray-200 dark:bg-gray-800"
-                    } transition-colors duration-300 rounded-full`}
+                    className={`h-1 bg-orange-500 absolute top-[22px] transition-all duration-300 ${
+                      step >= 3 ? "w-full" : "w-0"
+                    }`}
                   ></div>
                 </div>
-                <div
-                  className={`flex flex-col items-center ${
-                    step >= 3
-                      ? "text-primary"
-                      : "text-gray-400 dark:text-gray-600"
-                  }`}
-                >
+
+                <div className="flex flex-col items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-colors ${
                       step >= 3
-                        ? "bg-primary text-white"
-                        : "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+                        ? "bg-orange-500 text-white"
+                        : "bg-gray-200 dark:bg-gray-800 text-gray-500"
                     }`}
                   >
                     <FileText className="h-5 w-5" />
                   </div>
-                  <span className="text-xs">Summary</span>
+                  <span className="text-xs font-medium mt-1">Summary</span>
                 </div>
               </div>
             </div>
@@ -394,7 +642,7 @@ export default function ReservationWizard({
                     <Button
                       type="button"
                       size="sm"
-                      className="py-2"
+                      className="py-2 bg-orange-500 hover:bg-orange-600 text-white"
                       onClick={() => setIsClientModalOpen(true)}
                     >
                       <Plus className="h-4 w-4 mr-2" />
@@ -419,7 +667,7 @@ export default function ReservationWizard({
                         key={client.id}
                         className={`p-3 border rounded-md cursor-pointer transition-colors ${
                           formData.clientId === client.id
-                            ? "border-primary bg-primary/5"
+                            ? "border-orange-500 bg-orange-500/10"
                             : "border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
                         }`}
                         onClick={() =>
@@ -442,6 +690,25 @@ export default function ReservationWizard({
                             {client.city}, {client.postalCode}
                           </div>
                         </div>
+
+                        {/* Informacja o kosztach transportu - widoczna tylko gdy klient jest wybrany */}
+                        {formData.clientId === client.id &&
+                          transportDistance > 0 && (
+                            <div className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded-md flex items-start">
+                              <Info className="h-4 w-4 mr-1 text-orange-500 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p>
+                                  Transport: {transportDistance} km (
+                                  {TOTAL_TRIPS} przejazdy)
+                                </p>
+                                <p>
+                                  Koszt transportu: {transportCost} zł (
+                                  {TRANSPORT_COST_PER_KM} zł/km,{" "}
+                                  {FREE_KM_ONE_WAY} km gratis w jedną stronę)
+                                </p>
+                              </div>
+                            </div>
+                          )}
                       </div>
                     ))}
 
@@ -455,7 +722,7 @@ export default function ReservationWizard({
                   <div className="flex justify-end mt-6">
                     <Button
                       type="button"
-                      className="py-2"
+                      className="py-2 bg-orange-500 hover:bg-orange-600 text-white"
                       onClick={nextStep}
                       disabled={!formData.clientId}
                     >
@@ -472,40 +739,110 @@ export default function ReservationWizard({
                   <h3 className="text-lg font-medium mb-4">
                     Select Attractions & Dates
                   </h3>
-                  {dateError && (
-                    <p className="text-sm text-red-500 dark:text-red-400">
-                      {dateError}
-                    </p>
-                  )}
-                  {/* Date range picker */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid w-full items-center gap-2">
-                      <Label>Start Date & Time</Label>
-                      <DatePicker
-                        selected={formData.startDate || new Date()}
-                        onChange={(date) => {
-                          if (!date) return;
-                          setFormData((prev) => ({ ...prev, startDate: date }));
-                        }}
-                        showTimeSelect
-                        dateFormat="Pp"
-                        className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2"
-                      />
+
+                  {/* Custom Date Range Picker */}
+                  <div className="grid w-full items-center gap-2">
+                    <Label htmlFor="date-range">Date Range</Label>
+                    <div className="relative">
+                      <Button
+                        id="date-range"
+                        type="button"
+                        variant="outline"
+                        className={`w-full justify-start text-left font-normal ${
+                          dateError ? "border-red-500" : ""
+                        }`}
+                        onClick={() => setShowDatePicker(!showDatePicker)}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        <span>{formatDateRange()}</span>
+                      </Button>
+
+                      {showDatePicker && (
+                        <div
+                          ref={datePickerRef}
+                          className="absolute z-50 mt-1 bg-background border border-border rounded-md shadow-lg p-4 w-auto"
+                        >
+                          <div className="flex flex-col gap-4">
+                            <div>
+                              <DatePicker
+                                selected={dateRange[0]}
+                                onChange={handleDateChange}
+                                startDate={dateRange[0]}
+                                endDate={dateRange[1]}
+                                selectsRange
+                                inline
+                                monthsShown={1}
+                                calendarClassName="custom-calendar"
+                              />
+                            </div>
+
+                            <div className="space-y-3">
+                              <Label>Czas trwania</Label>
+                              <RadioGroup
+                                value={dayOption}
+                                onValueChange={(value) =>
+                                  handleDayOptionChange(value as DayOption)
+                                }
+                                className="flex flex-col space-y-2"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem
+                                    value="full-day"
+                                    id="full-day"
+                                  />
+                                  <Label
+                                    htmlFor="full-day"
+                                    className="cursor-pointer"
+                                  >
+                                    Cały dzień
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem
+                                    value="morning"
+                                    id="morning"
+                                  />
+                                  <Label
+                                    htmlFor="morning"
+                                    className="cursor-pointer"
+                                  >
+                                    Rano (do 12:00)
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem
+                                    value="afternoon"
+                                    id="afternoon"
+                                  />
+                                  <Label
+                                    htmlFor="afternoon"
+                                    className="cursor-pointer"
+                                  >
+                                    Popołudnie (od 12:00)
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
+
+                            <div className="flex justify-end">
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="bg-orange-500 hover:bg-orange-600 text-white"
+                                onClick={() => setShowDatePicker(false)}
+                              >
+                                Apply
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="grid w-full items-center gap-2">
-                      <Label>End Date & Time</Label>
-                      <DatePicker
-                        selected={formData.endDate || new Date()}
-                        onChange={(date) => {
-                          if (!date) return;
-                          setFormData((prev) => ({ ...prev, startDate: date }));
-                        }}
-                        showTimeSelect
-                        dateFormat="Pp"
-                        className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2"
-                      />
-                    </div>
+                    {dateError && (
+                      <p className="text-sm text-red-500">{dateError}</p>
+                    )}
                   </div>
+
                   {/* Status select */}
                   <div className="grid w-full items-center gap-2">
                     <Label htmlFor="status">Status</Label>
@@ -529,6 +866,7 @@ export default function ReservationWizard({
                       </SelectContent>
                     </Select>
                   </div>
+
                   {/* Attractions */}
                   <div className="space-y-2">
                     <Label>Selected Attractions</Label>
@@ -581,7 +919,8 @@ export default function ReservationWizard({
                               isAttractionAvailable(
                                 attraction.id,
                                 formData.startDate,
-                                formData.endDate
+                                formData.endDate,
+                                dayOption
                               )
                             )
                             .map((attraction) => (
@@ -595,7 +934,31 @@ export default function ReservationWizard({
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center cursor-help">
+                              <Info className="h-4 w-4 mr-1 text-orange-500" />
+                              <span>
+                                Dostępność atrakcji zależy od wybranej daty i
+                                pory dnia
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              Jeśli wybierzesz opcję "pół dnia", możesz
+                              zarezerwować atrakcję, która jest już
+                              zarezerwowana na drugą połowę dnia.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
+
                   {/* Notes */}
                   <div className="grid w-full items-center gap-2">
                     <Label htmlFor="notes">Notes</Label>
@@ -605,9 +968,10 @@ export default function ReservationWizard({
                       value={formData.notes || ""}
                       onChange={handleInputChange}
                       placeholder="Add any additional notes here..."
-                      className="min-h-[100px] h-10"
+                      className="min-h-[100px]"
                     />
                   </div>
+
                   <div className="flex justify-between mt-6">
                     <Button
                       type="button"
@@ -620,11 +984,11 @@ export default function ReservationWizard({
                     </Button>
                     <Button
                       type="button"
-                      className="py-2"
+                      className="py-2 bg-orange-500 hover:bg-orange-600 text-white"
                       onClick={nextStep}
                       disabled={
-                        !formData.startDate ||
-                        !formData.endDate ||
+                        !dateRange[0] ||
+                        !dateRange[1] ||
                         formData.attractions?.length === 0 ||
                         !!dateError
                       }
@@ -651,24 +1015,24 @@ export default function ReservationWizard({
                       <CardContent>
                         {selectedClient && (
                           <div className="space-y-2">
-                            <div className="flex justify-between">
+                            <div className="flex justify-between flex-wrap">
                               <span className="font-medium">Name:</span>
                               <span>
                                 {selectedClient.firstName}{" "}
                                 {selectedClient.lastName}
                               </span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between flex-wrap">
                               <span className="font-medium">Phone:</span>
                               <span>{selectedClient.phone}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between flex-wrap">
                               <span className="font-medium">Email:</span>
                               <span>{selectedClient.email || "N/A"}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between flex-wrap">
                               <span className="font-medium">Address:</span>
-                              <span>
+                              <span className="text-right">
                                 {selectedClient.street}{" "}
                                 {selectedClient.buildingNumber},{" "}
                                 {selectedClient.postalCode}{" "}
@@ -686,36 +1050,24 @@ export default function ReservationWizard({
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="font-medium">Start Date:</span>
-                            <span>
-                              {formData.startDate
-                                ? new Date(
-                                    formData.startDate
-                                  ).toLocaleDateString()
-                                : "Not specified"}
+                          <div className="flex justify-between flex-wrap">
+                            <span className="font-medium">Date Range:</span>
+                            <span className="text-right">
+                              {formatDateRange()}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium">End Date:</span>
-                            <span>
-                              {formData.endDate
-                                ? new Date(
-                                    formData.endDate
-                                  ).toLocaleDateString()
-                                : "Not specified"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between flex-wrap">
                             <span className="font-medium">Status:</span>
                             <span className="capitalize">
                               {formData.status?.replace("-", " ") ||
                                 "Not specified"}
                             </span>
                           </div>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between flex-wrap">
                             <span className="font-medium">Notes:</span>
-                            <span>{formData.notes || "None"}</span>
+                            <span className="text-right max-w-[60%]">
+                              {formData.notes || "None"}
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -736,9 +1088,28 @@ export default function ReservationWizard({
                               <span>${item.attraction.price}</span>
                             </div>
                           ))}
-                          <div className="border-t pt-2 mt-2 flex justify-between font-bold">
-                            <span>Total:</span>
-                            <span>${formData.totalPrice}</span>
+                          <div className="border-t pt-2 mt-2">
+                            <div className="flex justify-between">
+                              <span>Suma za atrakcje:</span>
+                              <span>
+                                $
+                                {formData.attractions?.reduce(
+                                  (sum, item) =>
+                                    sum + Number(item.attraction.price),
+                                  0
+                                ) || 0}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-orange-600">
+                              <span>
+                                Koszt transportu ({transportDistance} km):
+                              </span>
+                              <span>${transportCost}</span>
+                            </div>
+                            <div className="flex justify-between font-bold mt-2">
+                              <span>Razem:</span>
+                              <span>${formData.totalPrice}</span>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -755,7 +1126,10 @@ export default function ReservationWizard({
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button type="submit" className="py-2">
+                    <Button
+                      type="submit"
+                      className="py-2 bg-orange-500 hover:bg-orange-600 text-white"
+                    >
                       Save Reservation
                     </Button>
                   </div>
