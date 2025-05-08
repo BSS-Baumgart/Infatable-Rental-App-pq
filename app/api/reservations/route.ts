@@ -17,8 +17,16 @@ export async function GET() {
 export async function POST(req: Request) {
   const data = await req.json();
 
+  const last = await prisma.reservation.findFirst({
+    orderBy: { createdAt: "desc" },
+  });
+  const nextNumber = `REZ-${new Date().getFullYear()}-${String(
+    last ? parseInt(last.name.split("-")[2]) + 1 : 1
+  ).padStart(4, "0")}`;
+
   const created = await prisma.reservation.create({
     data: {
+      name: nextNumber,
       clientId: data.clientId,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),

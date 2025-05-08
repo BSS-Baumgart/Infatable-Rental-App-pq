@@ -158,7 +158,7 @@ export default function ReservationDetailPage({
               {t("common.back")}
             </Button>
             <h1 className="text-2xl font-bold">
-              {t("reservations.reservation")} #{reservation.id}
+              {t("reservations.name")} #{reservation.name}
             </h1>
             <Badge
               className={
