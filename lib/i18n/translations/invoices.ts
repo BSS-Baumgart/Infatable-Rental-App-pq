@@ -1,4 +1,4 @@
-import type { TranslationRecord } from "../types"
+import type { TranslationRecord } from "../types";
 
 export const invoicesTranslations: TranslationRecord = {
   en: {
@@ -68,6 +68,18 @@ export const invoicesTranslations: TranslationRecord = {
     "invoices.preview": "Preview",
     "invoices.print": "Print",
     "invoices.download": "Download",
+    isCompanyInvoice: "VAT Invoice",
+    companyInvoice: "VAT Invoice",
+    companyName: "Company Name",
+    taxId: "Tax ID",
+    enterCompanyName: "Enter company name",
+    enterTaxId: "Enter tax ID",
+    companyDataRequired: "Company name and Tax ID are required for VAT invoice",
+    clientDataUpdated: "Client company data has been updated",
+    clientUpdateError: "Error updating client data",
+    clientLoadError: "Error loading client data",
+    type: "Type",
+    receipt: "Receipt",
   },
   pl: {
     "invoices.title": "Faktury",
@@ -136,5 +148,17 @@ export const invoicesTranslations: TranslationRecord = {
     "invoices.preview": "Podgląd",
     "invoices.print": "Drukuj",
     "invoices.download": "Pobierz",
+    isCompanyInvoice: "Faktura VAT",
+    companyInvoice: "Faktura VAT",
+    companyName: "Nazwa firmy",
+    taxId: "NIP",
+    enterCompanyName: "Wprowadź nazwę firmy",
+    enterTaxId: "Wprowadź NIP",
+    companyDataRequired: "Nazwa firmy i NIP są wymagane dla faktury VAT",
+    clientDataUpdated: "Dane firmy klienta zostały zaktualizowane",
+    clientUpdateError: "Błąd podczas aktualizacji danych klienta",
+    clientLoadError: "Błąd podczas ładowania danych klienta",
+    type: "Typ",
+    receipt: "Paragon",
   },
-}
+};

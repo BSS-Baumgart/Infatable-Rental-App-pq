@@ -82,6 +82,7 @@ export interface Reservation {
 
 export interface Invoice {
   id: string;
+  invoiceNumber?: string;
   reservationId: string;
   reservation?: Reservation;
   clientId?: string;
@@ -91,6 +92,13 @@ export interface Invoice {
   amount: number;
   status: InvoiceStatus;
   pdfUrl?: string;
+  isCompanyInvoice: boolean;
+  companyName?: string;
+  taxId?: string;
+  paidAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  notes?: string;
 }
 
 export interface Document {

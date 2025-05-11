@@ -3,6 +3,31 @@ import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/middleware/withAuth";
 import { logAudit } from "@/lib/log-audit";
 
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const params = await context.params;
+    const { id } = params;
+
+    const client = await prisma.client.findUnique({
+      where: { id },
+    });
+
+    if (!client) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(client);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
+  }
+}
+
 export const PUT = async (
   req: NextRequest,
   context: { params: Promise<{ id: string }> }

@@ -149,17 +149,26 @@ model ReservationAttraction {
 }
 
 model Invoice {
-  id            String      @id @default(uuid())
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
-  reservationId String
-  client        Client?     @relation(fields: [clientId], references: [id])
-  clientId      String?
-  issueDate     DateTime
-  dueDate       DateTime
-  amount        Float
-  status        InvoiceStatus
-  pdfUrl        String?
+  id              String        @id @default(uuid())
+  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  reservationId   String
+  client          Client?       @relation(fields: [clientId], references: [id])
+  clientId        String?
+  issueDate       DateTime
+  dueDate         DateTime
+  amount          Float
+  status          InvoiceStatus
+  pdfUrl          String?
+  isCompanyInvoice Boolean      @default(false)
+  companyName     String?
+  taxId           String?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  notes           String?
+  invoiceNumber   String? 
 }
+
 
 model Document {
   id            String               @id @default(uuid())

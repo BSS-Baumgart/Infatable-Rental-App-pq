@@ -39,7 +39,7 @@ interface ReservationModalProps {
 
 const statusOptions: ReservationStatus[] = [
   "pending",
-  "in-progress",
+  "in_progress",
   "completed",
   "cancelled",
 ];

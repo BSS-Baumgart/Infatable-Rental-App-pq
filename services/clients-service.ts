@@ -93,6 +93,10 @@ export async function getClients(
   }
 }
 
+export async function getClient(id: string): Promise<Client> {
+  return apiRequest(`/clients/${id}`);
+}
+
 export async function createClient(
   data: Omit<Client, "id" | "createdAt">
 ): Promise<Client> {
