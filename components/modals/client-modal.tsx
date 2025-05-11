@@ -39,6 +39,8 @@ export default function ClientModal({
     buildingNumber: "",
     postalCode: "",
     city: "",
+    companyName: "",
+    taxId: "",
   });
 
   // Initialize form with client data if editing
@@ -54,6 +56,8 @@ export default function ClientModal({
         buildingNumber: client.buildingNumber,
         postalCode: client.postalCode,
         city: client.city,
+        companyName: client.companyName || "",
+        taxId: client.taxId || "",
       });
     } else {
       // Reset form for new client
@@ -66,6 +70,8 @@ export default function ClientModal({
         buildingNumber: "",
         postalCode: "",
         city: "",
+        companyName: "",
+        taxId: "",
       });
     }
   }, [client, isOpen]);
@@ -82,13 +88,49 @@ export default function ClientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {client ? t("clients.edit") : t("clients.new")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          {/* Company Information (Optional) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid w-full items-center gap-2">
+              <Label htmlFor="companyName">
+                {t("clients.companyName") || "Firma"}
+                <span className="text-xs text-gray-500 ml-1">
+                  ({t("common.optional") || "opcjonalnie"})
+                </span>
+              </Label>
+              <Input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={formData.companyName || ""}
+                onChange={handleInputChange}
+                placeholder={t("common.optional") || "Opcjonalnie"}
+              />
+            </div>
+            <div className="grid w-full items-center gap-2">
+              <Label htmlFor="taxId">
+                {t("clients.taxId") || "NIP"}
+                <span className="text-xs text-gray-500 ml-1">
+                  ({t("common.optional") || "opcjonalnie"})
+                </span>
+              </Label>
+              <Input
+                type="text"
+                id="taxId"
+                name="taxId"
+                value={formData.taxId || ""}
+                onChange={handleInputChange}
+                placeholder={t("common.optional") || "Opcjonalnie"}
+              />
+            </div>
+          </div>
+
           {/* Personal Information */}
           <div className="grid grid-cols-2 gap-4">
             <div className="grid w-full items-center gap-2">

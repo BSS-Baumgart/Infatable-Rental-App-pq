@@ -44,6 +44,8 @@ export interface Client {
   postalCode: string;
   city: string;
   createdAt: Date;
+  companyName?: string;
+  taxId?: string;
 }
 
 export interface Attraction {

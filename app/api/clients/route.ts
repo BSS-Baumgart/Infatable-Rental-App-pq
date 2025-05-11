@@ -1,13 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const clients = await prisma.client.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const url = new URL(req.url);
+    const page = Number.parseInt(url.searchParams.get("page") || "1");
+    const limit = Number.parseInt(url.searchParams.get("limit") || "10");
+    const search = url.searchParams.get("search") || "";
 
-    return NextResponse.json(clients);
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: "insensitive" } },
+        { lastName: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search } },
+        { companyName: { contains: search, mode: "insensitive" } },
+        { taxId: { contains: search } },
+      ];
+    }
+
+    const [clients, total] = await Promise.all([
+      prisma.client.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.client.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      data: clients,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error("GET /api/clients error", error);
     return NextResponse.json(
@@ -50,6 +81,8 @@ export async function POST(req: NextRequest) {
         buildingNumber: data.buildingNumber,
         postalCode: data.postalCode,
         city: data.city,
+        companyName: data.companyName || null,
+        taxId: data.taxId || null,
       },
     });
 
